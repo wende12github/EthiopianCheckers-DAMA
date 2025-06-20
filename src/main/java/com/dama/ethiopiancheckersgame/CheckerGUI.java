@@ -191,12 +191,14 @@ public class CheckerGUI extends Application {
                                 showAlert("Notice", "Another capture is possible. Continue capturing.");
                                 selectedRow = row;
                                 selectedCol = col;
-                                return; // Allow the player to continue capturing
+                                // Do NOT switch turn here, same player continues
+                                return;
                             } else {
-                                // Reset selection and switch turns only if no more captures are available
+                                // Reset selection for next player
                                 selectedRow = -1;
                                 selectedCol = -1;
-                                gameManager.switchTurn();
+                                // Do NOT call gameManager.switchTurn() here, as makeMove already does it
+                                // Just update the turn label
                                 updateTurnLabel();
                             }
                         } else {
