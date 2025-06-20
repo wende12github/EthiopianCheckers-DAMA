@@ -1,3 +1,86 @@
+# Ethiopian Checkers Game (Dama)
+
+A traditional Ethiopian Checkers (Dama) game for two players, playable in terminal and JavaFX GUI.
+
+---
+
+## Table of Contents
+- [Getting Started](#getting-started)
+- [How to Run](#how-to-run)
+- [How to Collaborate](#how-to-collaborate)
+- [Screenshot](#screenshot)
+- [System Documentation](#system-documentation-dama-ethiopian-checkers-game)
+
+---
+
+## Getting Started
+
+### Clone the Repository
+
+```sh
+git clone https://github.com/yourusername/EthiopianCheckersGame.git
+cd EthiopianCheckersGame
+```
+
+### Requirements
+- Java 17 or higher
+- [JavaFX SDK](https://openjfx.io/) (for GUI)
+- Maven
+
+---
+
+## How to Run
+
+### Terminal Version
+```sh
+mvn clean compile
+mvn exec:java -Dexec.mainClass="com.dama.ethiopiancheckersgame.MainTerminal"
+```
+
+### JavaFX GUI Version
+1. Make sure you have JavaFX SDK and set the `--module-path` VM option.
+2. Run:
+```sh
+mvn clean javafx:run
+```
+Or, in your IDE, set VM options:
+```
+--module-path "C:/path/to/javafx-sdk-XX/lib" --add-modules javafx.controls,javafx.fxml
+```
+
+---
+
+## How to Collaborate
+
+1. **Fork** the repository on GitHub.
+2. **Clone** your fork:
+   ```sh
+   git clone https://github.com/yourusername/EthiopianCheckersGame.git
+   cd EthiopianCheckersGame
+   ```
+3. **Create a new branch** for your feature or bugfix:
+   ```sh
+   git checkout -b feature/my-feature
+   ```
+4. **Make your changes** and commit with clear messages:
+   ```sh
+   git add .
+   git commit -m "Describe your change"
+   git push origin feature/my-feature
+   ```
+5. **Open a Pull Request** on GitHub.
+6. Please follow code style and add comments. For major changes, open an issue first to discuss.
+
+---
+
+## Screenshot
+
+Add screenshots to the `images/` folder and reference them here:
+
+![Game Board Screenshot](images/Screenshot%202025-06-20%20033309.png)
+
+---
+
 # System Documentation: Dama Ethiopian Checkers Game
 
 ## 1. System Overview
