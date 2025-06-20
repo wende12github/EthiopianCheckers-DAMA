@@ -2,6 +2,7 @@ package com.dama.ethiopiancheckersgame;
 
 import com.dama.ethiopiancheckersgame.GameManager;
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -9,6 +10,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
@@ -25,6 +27,7 @@ public class CheckerGUI extends Application {
     private String player1Name;
     private String player2Name;
     private Label turnLabel;
+    private Stage primaryStage; // Store reference for switching scenes
 
     public CheckerGUI() {
         // No-arg constructor for JavaFX application
@@ -39,15 +42,70 @@ public class CheckerGUI extends Application {
 
     @Override
     public void start(Stage stage) {
+        this.primaryStage = stage;
         if (gameManager == null) {
-            gameManager = new GameManager("Player 1", "Player 2");
-            player1Name = gameManager.getPlayer1().getName();
-            player2Name = gameManager.getPlayer2().getName();
+            showNameEntryScreen();
+        } else {
+            showGameBoard();
         }
+    }
 
+    private void showNameEntryScreen() {
+        primaryStage.setTitle("Enter Player Names");
         GridPane gridPane = new GridPane();
         gridPane.setAlignment(Pos.CENTER);
+        gridPane.setPadding(new Insets(20));
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
 
+        Label player1Label = new Label("Player 1's name:");
+        player1Label.setFont(Font.font("Arial", 14));
+        TextField player1Field = new TextField();
+        player1Field.setFont(Font.font("Arial", 14));
+        player1Field.setPrefWidth(200);
+
+        Label player2Label = new Label("Player 2's name:");
+        player2Label.setFont(Font.font("Arial", 14));
+        TextField player2Field = new TextField();
+        player2Field.setFont(Font.font("Arial", 14));
+        player2Field.setPrefWidth(200);
+
+        Button startButton = new Button("Start Game");
+        startButton.setFont(Font.font("Arial", 14));
+        startButton.setStyle("-fx-background-color: #739552; -fx-text-fill: white; -fx-padding: 10 20 10 20;");
+
+        startButton.setOnAction(e -> {
+            String p1 = player1Field.getText().trim();
+            String p2 = player2Field.getText().trim();
+            if (!p1.isEmpty() && !p2.isEmpty()) {
+                gameManager = new GameManager(p1, p2);
+                player1Name = p1;
+                player2Name = p2;
+                showGameBoard();
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Input Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Please enter names for both players.");
+                alert.showAndWait();
+            }
+        });
+
+        gridPane.add(player1Label, 0, 0);
+        gridPane.add(player1Field, 1, 0);
+        gridPane.add(player2Label, 0, 1);
+        gridPane.add(player2Field, 1, 1);
+        gridPane.add(startButton, 0, 2, 2, 1);
+        GridPane.setMargin(startButton, new Insets(10, 0, 0, 0));
+
+        Scene scene = new Scene(gridPane, 700, 550);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void showGameBoard() {
+        GridPane gridPane = new GridPane();
+        gridPane.setAlignment(Pos.CENTER);
         buttons = new Button[8][8];
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -77,9 +135,9 @@ public class CheckerGUI extends Application {
         updateBoard(); // Initial rendering of the board
 
         Scene scene = new Scene(root, 700, 750);
-        stage.setTitle("Ethiopian Checkers (Dama)");
-        stage.setScene(scene);
-        stage.show();
+        primaryStage.setTitle("Ethiopian Checkers (Dama)");
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 
     private void updateTurnLabel() {
