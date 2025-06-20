@@ -77,7 +77,8 @@ Or, in your IDE, set VM options:
 
 Add screenshots to the `images/` folder and reference them here:
 
-![Game Board Screenshot](images/Screenshot%202025-06-20%20033309.png)
+![Game Board Screenshot](EthiopianCheckersGame/images/Screenshot%202025-06-20%20033309.png)
+![Game Board Screenshot2](EthiopianCheckersGame/images/Screenshot%202025-06-20%20033427.png)
 
 ---
 
