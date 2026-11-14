@@ -1,12 +1,14 @@
 package com.dama.ethiopiancheckersgame;
 
+import com.dama.ethiopiancheckersgame.ui.cli.TerminalGame;
+
 public class MainTerminal {
     public static void main(String[] args) {
         try {
-            GameManager gameManager = new GameManager();
-            gameManager.play();
+            TerminalGame.run();
         } catch (Exception ex) {
             ErrorLogger.logError("Error in terminal game execution", ex);
         }
     }
 }
+

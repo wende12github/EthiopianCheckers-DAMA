@@ -1,52 +1,98 @@
-# Ethiopian Checkers Game (Dama)
+# Ethiopian Checkers Game (Dama / የኢትዮጵያ ዳማ) v2.0
 
-A traditional Ethiopian Checkers (Dama) game for two players, playable in terminal and JavaFX GUI.
+An authentic, modernized implementation of traditional Ethiopian Checkers (Dama) featuring **Player vs Computer (AI)** and **Two-Player Local Play**, available in both an interactive JavaFX GUI and a text-based Terminal interface.
+
+---
+
+## What's New in v2.0
+* **Computer / AI Opponent**: Play against an AI with 3 difficulty modes: **Easy**, **Medium (Tactical Minimax)**, and **Hard (Alpha-Beta Pruning with Board Control Heuristics)**.
+* **Authentic Ethiopian Dama Rules**:
+  * **Flying King (Dama / ንጉሥ)**: Kings slide any distance diagonally and capture over distance, landing on any open square behind captured pieces.
+  * **Mandatory Captures & Maximum Capture Rule**: Players must choose move sequences that capture the maximum number of pieces.
+  * **Chained Multi-Jumps**: Full multi-capture jump trees are supported.
+* **Decoupled Component Architecture**: Clean separation between domain rules (`core`), AI engines (`player.ai`), game controllers (`engine`), and user interfaces (`ui.gui`, `ui.cli`).
+* **Non-Blocking Visual Feedback**: In the GUI, pieces with mandatory captures feature a subtle amber pulse (no disruptive modal popups).
 
 ---
 
 ## Table of Contents
-- [Getting Started](#getting-started)
+- [Requirements](#requirements)
 - [How to Run](#how-to-run)
-- [How to Collaborate](#how-to-collaborate)
-- [Screenshot](#screenshot)
-- [System Documentation](#system-documentation-dama-ethiopian-checkers-game)
+  - [JavaFX GUI Version](#javafx-gui-version)
+  - [Terminal Version](#terminal-version)
+  - [Running Unit Tests](#running-unit-tests)
+- [System Architecture](#system-architecture)
+- [Game Rules Summary](#game-rules-summary)
+- [Version History & Git Tags](#version-history--git-tags)
 
 ---
 
-## Getting Started
-
-### Clone the Repository
-
-```sh
-git clone https://github.com/yourusername/EthiopianCheckersGame.git
-cd EthiopianCheckersGame
-```
-
-### Requirements
-- Java 17 or higher
-- [JavaFX SDK](https://openjfx.io/) (for GUI)
-- Maven
+## Requirements
+- **Java**: Java 21 (LTS) or higher
+- **Maven**: Maven 3.8+ (included via `./mvnw` wrapper)
+- **JavaFX**: 17.0.6+ (managed automatically via Maven)
 
 ---
 
 ## How to Run
 
-### Terminal Version
-```sh
-mvn clean compile
-mvn exec:java -Dexec.mainClass="com.dama.ethiopiancheckersgame.MainTerminal"
-```
-
 ### JavaFX GUI Version
-1. Make sure you have JavaFX SDK and set the `--module-path` VM option.
-2. Run:
+Run directly with the Maven wrapper:
+```sh
+./mvnw clean javafx:run
+```
+Or with an installed Maven:
 ```sh
 mvn clean javafx:run
 ```
-Or, in your IDE, set VM options:
+
+Or using the standard Java CLI directly from compiled classes:
+```sh
+java --module-path $(find ~/.m2/repository/org/openjfx -name "*17.0.6-linux.jar" | paste -sd: -) \
+     --add-modules javafx.controls,javafx.fxml \
+     -cp target/classes com.dama.ethiopiancheckersgame.EthiopianCheckersGame
 ```
---module-path "C:/path/to/javafx-sdk-XX/lib" --add-modules javafx.controls,javafx.fxml
+
+### Terminal Version
+Run from the command line:
+```sh
+./mvnw clean compile exec:java -Dexec.mainClass="com.dama.ethiopiancheckersgame.MainTerminal"
 ```
+Or directly via Java CLI:
+```sh
+java -cp target/classes com.dama.ethiopiancheckersgame.MainTerminal
+```
+
+### Running Unit Tests
+```sh
+./mvnw test-compile
+java -cp $(find ~/.m2/repository/org/junit ~/.m2/repository/org/opentest4j ~/.m2/repository/org/apiguardian ~/.m2/repository/org/openjfx -name "*.jar" | paste -sd: -):target/classes:target/test-classes com.dama.ethiopiancheckersgame.TestRunner
+```
+
+---
+
+## System Architecture
+
+The codebase is organized into decoupled, independent modules:
+
+```
+com.dama.ethiopiancheckersgame/
+├── core/
+│   ├── model/         # Immutable models: Position, Piece, PieceColor, PieceType, Move, Board, GameState
+│   └── rules/         # EthiopianDamaRules: Flying King, mandatory capture, maximum capture logic
+├── player/            # Player interface, HumanPlayer
+│   └── ai/            # AIPlayer, AIDifficulty, MinimaxEngine (Alpha-Beta), BoardEvaluator
+├── engine/            # GameSession (turn loop, undo stack), GameMode, GameEventListener
+└── ui/
+    ├── gui/           # JavaFX: EthiopianCheckersApp, StartMenu, GameScene, BoardCanvas, ControlPanel, Theme
+    └── cli/           # TerminalGame, MainTerminal
+```
+
+---
+
+## Version History & Git Tags
+* `v1.0.0-legacy`: Original baseline implementation.
+* `v2.0.0`: Upgraded architecture, Java 21 LTS support, AI player (Minimax + Alpha-Beta), authentic Ethiopian Dama rules engine, and modern GUI with mandatory capture visual indicators.
 
 ---
 
