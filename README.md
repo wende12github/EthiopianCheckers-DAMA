@@ -47,6 +47,7 @@ An authentic, modernized implementation of traditional Ethiopian Checkers (Dama)
   - [Terminal Version](#terminal-version)
   - [Running Unit Tests](#running-unit-tests)
 - [System Architecture](#system-architecture)
+- [Contributing & Collaboration](#contributing--collaboration)
 - [Game Rules Summary](#game-rules-summary)
 - [Version History & Git Tags](#version-history--git-tags)
 
@@ -161,26 +162,19 @@ com.dama.ethiopiancheckersgame/
 
 ---
 
-## How to Collaborate
+## Contributing & Collaboration
 
-1. **Fork** the repository on GitHub.
-2. **Clone** your fork:
-   ```sh
-   git clone https://github.com/yourusername/EthiopianCheckersGame.git
-   cd EthiopianCheckersGame
-   ```
-3. **Create a new branch** for your feature or bugfix:
-   ```sh
-   git checkout -b feature/my-feature
-   ```
-4. **Make your changes** and commit with clear messages:
-   ```sh
-   git add .
-   git commit -m "Describe your change"
-   git push origin feature/my-feature
-   ```
-5. **Open a Pull Request** on GitHub.
-6. Please follow code style and add comments. For major changes, open an issue first to discuss.
+We welcome open-source contributions from the global developer community! 
+
+To protect stability and avoid merge conflicts, this project enforces branch protection:
+* **`main`**: Protected production branch. Direct pushes and force pushes are blocked.
+* **`development`**: Active integration branch. **All Pull Requests must target `development`**.
+
+📖 **Read our full [Contribution Guide (CONTRIBUTING.md)](CONTRIBUTING.md)** for:
+- Detailed forking and branching instructions.
+- Architecture guidelines and where to add new features.
+- Instructions for running the 23-test verification suite locally.
+- Conventional commit standards and PR checklist.
 
 ---
 
