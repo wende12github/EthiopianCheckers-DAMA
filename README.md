@@ -23,13 +23,16 @@ An authentic, modernized implementation of traditional Ethiopian Checkers (Dama)
   * **Threefold Repetition**: Full board state fingerprinting prevents infinite cycle loops and declares a draw when the identical position occurs 3 times.
   * **50-Ply No-Progress Rule**: Declares a draw if 25 consecutive turns (50 plies) elapse without any captures or regular piece advances.
   * **Interactive Draw Offers**: Both players in Human vs Human can propose mutual draws; against Computer AI, the AI evaluates positional advantage via `BoardEvaluator`—accepting when balanced or losing, and declining when in a winning position.
+* **Bilingual Language Toggle (አማርኛ 🇪🇹 vs English 🇺🇸)**:
+  * Strict internationalization separating Amharic and English without mixed text.
+  * Live toggle pill switch available on the startup menu and in-game control sidebar.
 * **Online Multiplayer & Matchmaking**:
   * **⚡ Quick Match (ፈጣን ግጥሚያ)**: 1-click public matchmaking queue that automatically pairs players anywhere on the internet without needing room codes.
   * **🔒 Private Room (ከጓደኛ ጋር)**: Create or join custom matches with 4-digit room codes (e.g. `#4821`).
   * **Zero-Configuration Fallback**: Built-in embedded relay server automatically boots up if no external relay is found.
 * **Authentic Ethiopian Cultural Onboarding UI**:
   * Procedural **Tibeb (ጥበብ)** geometric textile ribbon patterns across the interface.
-  * Bilingual Ge'ez/Amharic typography (*የኢትዮጵያ ዳማ*, *እግረኛ*, *ታንከኛ*, *ነጠላ ተጫዋች*, *ሁለት ተጫዋች*, *የመስመር ላይ*).
+  * Pure Ge'ez/Amharic typography in Amharic mode (*የኢትዮጵያ ዳማ*, *እግረኛ*, *ታንከኛ*, *ነጠላ ተጫዋች*, *ሁለት ተጫዋች*, *የመስመር ላይ*) and clear English typography in English mode.
   * Interactive cards for Solo Play, Pass & Play, and Online Matchmaking.
 * **Non-Blocking Visual Feedback**: In the GUI, pieces with mandatory captures feature a subtle amber pulse (no disruptive modal popups).
 * **Game Over Experience**: Post-match floating card with **New Game** and **Review Board** mode.
@@ -38,6 +41,7 @@ An authentic, modernized implementation of traditional Ethiopian Checkers (Dama)
 
 ## Table of Contents
 - [Requirements](#requirements)
+- [Screenshots & Gallery](#screenshots--gallery)
 - [How to Run](#how-to-run)
   - [JavaFX GUI Version](#javafx-gui-version)
   - [Terminal Version](#terminal-version)
@@ -92,6 +96,43 @@ java -cp $(find ~/.m2/repository/org/junit ~/.m2/repository/org/opentest4j ~/.m2
 
 ---
 
+## Screenshots & Gallery
+
+### 🌟 Version 2.0 (Modernized Tournament Edition)
+
+#### 1. Cultural Onboarding & Language Toggle
+Authentic Ethiopian Tibeb (ጥበብ) decorative geometric textile banner, bilingual Language Toggle (`[ 🇪🇹 አማርኛ | 🇺🇸 English ]`), selectable Rule Variants (**እግረኛ** vs. **ታንከኛ**), and Mode Cards (Solo AI, Pass & Play, Online).
+![Cultural Onboarding](images/onboarding.png)
+
+---
+
+#### 2. Game Arena & First Move
+Tournament board canvas with real-time scorecards, active turn banner, pieces remaining, and non-blocking mandatory capture indicators.
+![First Move](images/first-move.png)
+
+---
+
+#### 3. Promoted King with Golden Royal Crown
+Vector-rendered royal golden crown on promoted Dama pieces with visual highlights for long-range flying moves and multi-jump combo captures.
+![King Move](images/king-move.png)
+
+---
+
+#### 4. Game Concluded & Review Mode
+Post-match conclusion overlay with winner/draw status, one-click **New Game** restart, and **Review Board** mode to study the match state.
+![Winner Overlay](images/winner.png)
+
+---
+
+### 🕰️ Version 1.0 (Legacy Baseline Comparison)
+The original monolithic prototype before the clean architecture and AI modernization:
+<p align="center">
+  <img src="images/Screenshot%202025-06-20%20033309.png" width="48%" alt="Legacy Board v1.0" />
+  <img src="images/Screenshot%202025-06-20%20033427.png" width="48%" alt="Legacy Dialog v1.0" />
+</p>
+
+---
+
 ## System Architecture
 
 The codebase is organized into decoupled, independent modules:
@@ -100,13 +141,16 @@ The codebase is organized into decoupled, independent modules:
 com.dama.ethiopiancheckersgame/
 ├── core/
 │   ├── model/         # Immutable models: Position, Piece, PieceColor, PieceType, Move, Board, GameState
-│   └── rules/         # EthiopianDamaRules: Flying King, mandatory capture, maximum capture logic
-├── player/            # Player interface, HumanPlayer
+│   └── rules/         # RuleStrategy: EgregnaRules (Short King) & TankegnaRules (Flying King)
+├── player/            # Player interface, HumanPlayer, NetworkPlayer
 │   └── ai/            # AIPlayer, AIDifficulty, MinimaxEngine (Alpha-Beta), BoardEvaluator
-├── engine/            # GameSession (turn loop, undo stack), GameMode, GameEventListener
+├── engine/            # GameSession (turn loop, undo stack), GameMode, DrawDetector, GameEventListener
+├── network/           # MatchmakingServer, NetworkClient, NetworkProtocol, NetworkEventListener
 └── ui/
-    ├── gui/           # JavaFX: EthiopianCheckersApp, StartMenu, GameScene, BoardCanvas, ControlPanel, Theme
-    └── cli/           # TerminalGame, MainTerminal
+    ├── gui/           # JavaFX: EthiopianCheckersApp, StartMenu, GameScene, BoardCanvas, ControlPanel, 
+    │                  # TibebBanner, LanguageToggleBar, Theme, ThemeCustomizerDialog
+    ├── i18n/          # I18n localization engine, Language enum (AMHARIC, ENGLISH)
+    └── cli/           # TerminalGame, MainTerminal (Headless ANSI interface)
 ```
 
 ---
@@ -137,15 +181,6 @@ com.dama.ethiopiancheckersgame/
    ```
 5. **Open a Pull Request** on GitHub.
 6. Please follow code style and add comments. For major changes, open an issue first to discuss.
-
----
-
-## Screenshot
-
-Add screenshots to the `images/` folder and reference them here:
-
-![Game Board Screenshot](EthiopianCheckersGame/images/Screenshot%202025-06-20%20033309.png)
-![Game Board Screenshot2](EthiopianCheckersGame/images/Screenshot%202025-06-20%20033427.png)
 
 ---
 
