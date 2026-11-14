@@ -14,7 +14,8 @@ public class TestRunner {
         Class<?>[] testClasses = {
                 EthiopianDamaRulesTest.class,
                 DrawDetectorTest.class,
-                com.dama.ethiopiancheckersgame.network.NetworkMatchmakingTest.class
+                com.dama.ethiopiancheckersgame.network.NetworkMatchmakingTest.class,
+                I18nTest.class
         };
 
         for (Class<?> testClass : testClasses) {

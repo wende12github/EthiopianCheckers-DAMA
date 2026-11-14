@@ -2,8 +2,11 @@ package com.dama.ethiopiancheckersgame.ui.gui;
 
 import com.dama.ethiopiancheckersgame.core.model.Board;
 import com.dama.ethiopiancheckersgame.core.model.PieceColor;
+import com.dama.ethiopiancheckersgame.core.rules.DamaVariant;
 import com.dama.ethiopiancheckersgame.engine.GameSession;
 import com.dama.ethiopiancheckersgame.player.Player;
+import com.dama.ethiopiancheckersgame.ui.i18n.I18n;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
@@ -19,11 +22,12 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+
 import java.util.Optional;
 
 /**
- * Isolated status and control sidebar panel.
- * Displays player scores, active variant badge, active turn, piece counts, and control buttons.
+ * Modern in-game control sidebar with strict language support, live score, turn indicators,
+ * player clocks, theme customizer, draw offer handler, and language toggle.
  */
 public class ControlPanel extends VBox {
     private final GameSession session;
@@ -32,8 +36,18 @@ public class ControlPanel extends VBox {
     private final Runnable onMenuRequested;
     private final Runnable onReviewRequested;
 
+    private final Label titleLabel;
     private final Label turnBanner;
     private final Label variantBadge;
+    private final Label gameOverTitle;
+    private final Button newGameBtn;
+    private final Button reviewBtn;
+    private final Button undoBtn;
+    private final Button drawBtn;
+    private final Button themeBtn;
+    private final Button restartBtn;
+    private final Button menuBtn;
+
     private final Label p1ScoreLabel;
     private final Label p2ScoreLabel;
     private final Label p1KingLabel;
@@ -53,31 +67,30 @@ public class ControlPanel extends VBox {
         this.onReviewRequested = onReviewRequested;
 
         setPrefWidth(260);
-        setPadding(new Insets(18));
-        setSpacing(12);
+        setPadding(new Insets(16));
+        setSpacing(10);
         setStyle("-fx-background-color: #2D2D2D; -fx-background-radius: 8px;");
 
-        // Game Title
-        Label titleLabel = new Label("Ethiopian Checkers");
+        // Top Header: Game Title
+        titleLabel = new Label();
         titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-        titleLabel.setTextFill(Color.web("#FFFFFF"));
+        titleLabel.setTextFill(Color.web("#FFC107"));
 
-        Label amharicSubtitle = new Label("የኢትዮጵያ ዳማ (Dama)");
-        amharicSubtitle.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 13));
-        amharicSubtitle.setTextFill(Color.web("#B0BEC5"));
+        // Language Toggle in Sidebar
+        LanguageToggleBar langToggle = new LanguageToggleBar();
 
         // Rules Variant Badge (Egregna vs Tankegna)
-        variantBadge = new Label("Rules: " + session.getVariant().getDisplayName());
+        variantBadge = new Label();
         variantBadge.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
         variantBadge.setTextFill(Color.web("#FFD54F"));
         variantBadge.setPadding(new Insets(4, 8, 4, 8));
         variantBadge.setStyle("-fx-background-color: #37474F; -fx-background-radius: 4px;");
 
         // Turn Banner
-        turnBanner = new Label("Turn: Player 1");
-        turnBanner.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+        turnBanner = new Label();
+        turnBanner.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         turnBanner.setTextFill(Color.web("#FFFFFF"));
-        turnBanner.setPadding(new Insets(10, 14, 10, 14));
+        turnBanner.setPadding(new Insets(8, 12, 8, 12));
         turnBanner.setMaxWidth(Double.MAX_VALUE);
         turnBanner.setAlignment(Pos.CENTER);
         turnBanner.setStyle("-fx-background-color: #43A047; -fx-background-radius: 6px;");
@@ -87,9 +100,9 @@ public class ControlPanel extends VBox {
         p1ColorIndicator.setStroke(Color.WHITE);
         p1ColorIndicator.setStrokeWidth(1.2);
         p1Card = createPlayerCard(session.getPlayer1().getName(), p1ColorIndicator);
-        p1ScoreLabel = new Label("Pieces: 12");
+        p1ScoreLabel = new Label();
         p1ScoreLabel.setTextFill(Color.web("#ECEFF1"));
-        p1KingLabel = new Label("Kings: 0");
+        p1KingLabel = new Label();
         p1KingLabel.setTextFill(Color.web("#FFD54F"));
         p1Card.getChildren().addAll(p1ScoreLabel, p1KingLabel);
 
@@ -98,9 +111,9 @@ public class ControlPanel extends VBox {
         p2ColorIndicator.setStroke(Color.WHITE);
         p2ColorIndicator.setStrokeWidth(1.2);
         p2Card = createPlayerCard(session.getPlayer2().getName(), p2ColorIndicator);
-        p2ScoreLabel = new Label("Pieces: 12");
+        p2ScoreLabel = new Label();
         p2ScoreLabel.setTextFill(Color.web("#ECEFF1"));
-        p2KingLabel = new Label("Kings: 0");
+        p2KingLabel = new Label();
         p2KingLabel.setTextFill(Color.web("#FFD54F"));
         p2Card.getChildren().addAll(p2ScoreLabel, p2KingLabel);
 
@@ -117,44 +130,45 @@ public class ControlPanel extends VBox {
         gameOverBox.setVisible(false);
         gameOverBox.setManaged(false);
 
-        Label gameOverTitle = new Label("Match Concluded");
+        gameOverTitle = new Label();
         gameOverTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         gameOverTitle.setTextFill(Color.web("#FFD54F"));
         gameOverTitle.setAlignment(Pos.CENTER);
         gameOverTitle.setMaxWidth(Double.MAX_VALUE);
 
-        Button newGameBtn = createStyledButton("▶ New Game", "#2E7D32");
+        newGameBtn = createStyledButton("", "#2E7D32");
         newGameBtn.setOnAction(e -> onRestartRequested.run());
 
-        Button reviewBtn = createStyledButton("🔍 Review Board", "#0288D1");
+        reviewBtn = createStyledButton("", "#0288D1");
         reviewBtn.setOnAction(e -> onReviewRequested.run());
 
         gameOverBox.getChildren().addAll(gameOverTitle, newGameBtn, reviewBtn);
 
         // Standard Buttons
-        Button undoBtn = createStyledButton("⤺ Undo Move", "#546E7A");
+        undoBtn = createStyledButton("", "#546E7A");
         if (session.getGameMode() == com.dama.ethiopiancheckersgame.engine.GameMode.ONLINE_MULTIPLAYER) {
             undoBtn.setDisable(true); // Undo disabled in competitive online play
         }
         undoBtn.setOnAction(e -> onUndoRequested.run());
 
-        Button drawBtn = createStyledButton("🤝 Offer Draw", "#455A64");
+        drawBtn = createStyledButton("", "#455A64");
         drawBtn.setOnAction(e -> handleDrawOffer());
 
-        Button themeBtn = createStyledButton("🎨 Theme / Colors", "#00838F");
+        themeBtn = createStyledButton("", "#00838F");
         themeBtn.setOnAction(e -> ThemeCustomizerDialog.show((Stage) getScene().getWindow()));
 
-        Button restartBtn = createStyledButton("↻ Restart Game", "#37474F");
+        restartBtn = createStyledButton("", "#37474F");
         restartBtn.setOnAction(e -> onRestartRequested.run());
 
-        Button menuBtn = createStyledButton("☰ Main Menu", "#263238");
+        menuBtn = createStyledButton("", "#263238");
         menuBtn.setOnAction(e -> onMenuRequested.run());
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
         getChildren().addAll(
-                titleLabel, amharicSubtitle,
+                titleLabel,
+                langToggle,
                 variantBadge,
                 turnBanner,
                 gameOverBox,
@@ -162,6 +176,29 @@ public class ControlPanel extends VBox {
                 spacer,
                 undoBtn, drawBtn, themeBtn, restartBtn, menuBtn
         );
+
+        I18n.addListener(lang -> Platform.runLater(this::updateLanguage));
+
+        updateLanguage();
+        updateState();
+    }
+
+    private void updateLanguage() {
+        titleLabel.setText(I18n.get("app.title"));
+
+        String variantName = (session.getVariant() == DamaVariant.EGREGNA) ?
+                I18n.get("variant.egregna.title") : I18n.get("variant.tankegna.title");
+        variantBadge.setText(variantName);
+
+        gameOverTitle.setText(I18n.get("game.concluded"));
+        newGameBtn.setText(I18n.get("btn.new_game"));
+        reviewBtn.setText(I18n.get("btn.review_board"));
+
+        undoBtn.setText(I18n.get("btn.undo"));
+        drawBtn.setText(I18n.get("btn.draw"));
+        themeBtn.setText(I18n.get("btn.theme"));
+        restartBtn.setText(I18n.get("btn.restart"));
+        menuBtn.setText(I18n.get("btn.menu"));
 
         updateState();
     }
@@ -173,10 +210,10 @@ public class ControlPanel extends VBox {
             boolean accepted = session.offerDraw(session.getCurrentPlayer());
             if (!accepted) {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                        "The Computer evaluated the current position and determined there is still a chance to find a winner. The draw offer was declined.",
+                        I18n.get("dialog.draw_declined_ai"),
                         ButtonType.OK);
-                alert.setTitle("Draw Offer Declined");
-                alert.setHeaderText("AI Continues Playing");
+                alert.setTitle(I18n.get("dialog.draw_declined_title"));
+                alert.setHeaderText(null);
                 alert.showAndWait();
             }
         } else if (session.getGameMode() == com.dama.ethiopiancheckersgame.engine.GameMode.ONLINE_MULTIPLAYER) {
@@ -185,18 +222,18 @@ public class ControlPanel extends VBox {
             if (other instanceof com.dama.ethiopiancheckersgame.player.NetworkPlayer np) {
                 np.getNetworkClient().offerDraw();
                 Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                        "Draw offer sent to online opponent. Waiting for their response...",
+                        I18n.get("dialog.draw_sent_body"),
                         ButtonType.OK);
-                alert.setTitle("Draw Offer Sent");
-                alert.setHeaderText("Waiting for Opponent");
+                alert.setTitle(I18n.get("dialog.draw_sent_title"));
+                alert.setHeaderText(null);
                 alert.showAndWait();
             }
         } else {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                    "A draw has been offered. Does the opponent accept?",
+                    I18n.get("dialog.draw_offered_body"),
                     ButtonType.YES, ButtonType.NO);
-            alert.setTitle("Draw Offer");
-            alert.setHeaderText("Mutual Draw Proposed");
+            alert.setTitle(I18n.get("dialog.draw_offered_title"));
+            alert.setHeaderText(I18n.get("dialog.draw_offered_header"));
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isPresent() && result.get() == ButtonType.YES) {
                 session.declareDraw("Mutual agreement between players.");
@@ -223,7 +260,7 @@ public class ControlPanel extends VBox {
 
     private Button createStyledButton(String text, String bgColor) {
         Button btn = new Button(text);
-        btn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        btn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
         btn.setTextFill(Color.WHITE);
         btn.setMaxWidth(Double.MAX_VALUE);
         btn.setPadding(new Insets(8, 12, 8, 12));
@@ -243,11 +280,11 @@ public class ControlPanel extends VBox {
         boolean isGameOver = session.getCurrentState().isGameOver();
 
         // Update counts
-        p1ScoreLabel.setText("Pieces remaining: " + board.countPieces(PieceColor.RED));
-        p1KingLabel.setText("Kings (Dama): " + board.countKings(PieceColor.RED));
+        p1ScoreLabel.setText(I18n.get("game.pieces_remaining") + board.countPieces(PieceColor.RED));
+        p1KingLabel.setText(I18n.get("game.kings") + board.countKings(PieceColor.RED));
 
-        p2ScoreLabel.setText("Pieces remaining: " + board.countPieces(PieceColor.BLACK));
-        p2KingLabel.setText("Kings (Dama): " + board.countKings(PieceColor.BLACK));
+        p2ScoreLabel.setText(I18n.get("game.pieces_remaining") + board.countPieces(PieceColor.BLACK));
+        p2KingLabel.setText(I18n.get("game.kings") + board.countKings(PieceColor.BLACK));
 
         // Game Over and Review Mode handling
         gameOverBox.setVisible(isGameOver);
@@ -255,21 +292,21 @@ public class ControlPanel extends VBox {
 
         if (isGameOver) {
             if (isReviewMode) {
-                turnBanner.setText("🔍 Review Mode");
+                turnBanner.setText(I18n.get("game.review_mode"));
                 turnBanner.setStyle("-fx-background-color: #0288D1; -fx-background-radius: 6px;");
             } else if (session.getCurrentState().isDraw()) {
-                turnBanner.setText("Match Drawn (አቻ)");
+                turnBanner.setText(I18n.get("game.draw_banner"));
                 turnBanner.setStyle("-fx-background-color: #546E7A; -fx-background-radius: 6px;");
             } else {
-                turnBanner.setText("Game Over!");
+                turnBanner.setText(I18n.get("game.game_over"));
                 turnBanner.setStyle("-fx-background-color: #D32F2F; -fx-background-radius: 6px;");
             }
         } else {
             if (current.isAI()) {
-                turnBanner.setText("AI Thinking...");
+                turnBanner.setText(I18n.get("game.ai_thinking"));
                 turnBanner.setStyle("-fx-background-color: #F57C00; -fx-background-radius: 6px;");
             } else {
-                turnBanner.setText("Turn: " + current.getName());
+                turnBanner.setText(I18n.get("game.turn") + current.getName());
                 turnBanner.setStyle(turn == PieceColor.RED ?
                         "-fx-background-color: #C62828; -fx-background-radius: 6px;" :
                         "-fx-background-color: #1E88E5; -fx-background-radius: 6px;");

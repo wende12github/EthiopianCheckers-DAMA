@@ -15,6 +15,8 @@ import com.dama.ethiopiancheckersgame.player.NetworkPlayer;
 import com.dama.ethiopiancheckersgame.player.Player;
 import com.dama.ethiopiancheckersgame.player.ai.AIDifficulty;
 import com.dama.ethiopiancheckersgame.player.ai.AIPlayer;
+import com.dama.ethiopiancheckersgame.ui.i18n.I18n;
+import com.dama.ethiopiancheckersgame.ui.i18n.Language;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -33,14 +35,13 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 /**
- * Culturally rich, onboarding startup menu for Ethiopian Checkers (Dama).
+ * Onboarding startup menu with strict Language Toggle separation (Amharic vs English).
  * Features:
- * - Authentic Ethiopian Tibeb (ጥበብ) decorative textile border.
- * - Bilingual Amharic/English typography.
+ * - Language Toggle Pill Bar (አማርኛ | English)
+ * - Authentic Ethiopian Tibeb (ጥበብ) decorative geometric textile banner.
  * - Interactive Mode Cards: Solo vs AI, Pass & Play, and Online Multiplayer.
- * - Online Quick Match (public matchmaking queue) & Private 4-digit Room Codes.
+ * - Online Quick Match & Private 4-digit Room Codes.
  * - Built-in embedded server fallback.
- * - Visual Rule Variant Cards (Egregna vs Tankegna) and Theme presets.
  */
 public class StartMenu extends VBox {
     private final Consumer<GameSession> onStartGame;
@@ -50,14 +51,38 @@ public class StartMenu extends VBox {
     private DamaVariant selectedVariant = DamaVariant.TANKEGNA;
     private AIDifficulty selectedDifficulty = AIDifficulty.MEDIUM;
 
-    // UI Controls
+    // Dynamic UI Controls for i18n
+    private final Label mainTitle;
+    private final Label subtitle;
+    private final Label variantSectionHeader;
+    private final Label egregnaTitle;
+    private final Label egregnaDesc;
+    private final Label tankegnaTitle;
+    private final Label tankegnaDesc;
+    private final Label modeSectionHeader;
+    private final Button aiModeBtn;
+    private final Button passModeBtn;
+    private final Button onlineModeBtn;
+    private final Label diffSectionLabel;
+    private final Button easyChip;
+    private final Button medChip;
+    private final Button hardChip;
+    private final Label p1Label;
+    private final Label p2Label;
     private final TextField p1Field;
     private final TextField p2Field;
-    private final Label statusBanner;
+    private final Label onlineTitle;
+    private final Button quickMatchBtn;
+    private final Button createRoomBtn;
+    private final TextField joinCodeField;
+    private final Button joinRoomBtn;
+    private final Label onlineStatusLabel;
+    private final Button cancelSearchBtn;
+    private final Button fallbackAIBtn;
     private final VBox onlineMatchmakingBox;
-    private Label onlineStatusLabel;
-    private Button cancelSearchBtn;
-    private Button fallbackAIBtn;
+    private final Label themeLabel;
+    private final Button customizeBtn;
+    private final Button startButton;
 
     // Network Client
     private NetworkClient networkClient;
@@ -69,33 +94,46 @@ public class StartMenu extends VBox {
         this.onStartGame = onStartGame;
 
         setAlignment(Pos.TOP_CENTER);
-        setSpacing(12);
+        setSpacing(10);
         setStyle("-fx-background-color: #121212;");
 
         // 1. Top Ethiopian Tibeb (ጥበብ) Decorative Geometric Banner
         TibebBanner tibebTop = new TibebBanner(920, 24);
 
-        // 2. Header Section
-        VBox headerBox = new VBox(2);
-        headerBox.setAlignment(Pos.CENTER);
-        headerBox.setPadding(new Insets(10, 0, 4, 0));
+        // 2. Header Bar: Title on center, Language Toggle on top-right
+        HBox topNavBar = new HBox(16);
+        topNavBar.setAlignment(Pos.CENTER);
+        topNavBar.setPadding(new Insets(6, 24, 0, 24));
 
-        Label amharicTitle = new Label("የኢትዮጵያ ዳማ");
-        amharicTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 34));
-        amharicTitle.setTextFill(Color.web("#FFC107")); // Imperial Gold
-        amharicTitle.setStyle("-fx-effect: dropshadow(three-pass-box, rgba(255,193,7,0.35), 14, 0, 0, 2);");
+        VBox titleBox = new VBox(2);
+        titleBox.setAlignment(Pos.CENTER);
 
-        Label englishTitle = new Label("ETHIOPIAN CHECKERS • TOURNAMENT EDITION");
-        englishTitle.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
-        englishTitle.setTextFill(Color.web("#B0BEC5"));
+        mainTitle = new Label();
+        mainTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 32));
+        mainTitle.setTextFill(Color.web("#FFC107"));
+        mainTitle.setStyle("-fx-effect: dropshadow(three-pass-box, rgba(255,193,7,0.35), 14, 0, 0, 2);");
 
-        headerBox.getChildren().addAll(amharicTitle, englishTitle);
+        subtitle = new Label();
+        subtitle.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
+        subtitle.setTextFill(Color.web("#B0BEC5"));
 
-        // Scrollable Central Content Card
-        VBox contentBox = new VBox(14);
+        titleBox.getChildren().addAll(mainTitle, subtitle);
+
+        Region leftSpacer = new Region();
+        Region rightSpacer = new Region();
+        HBox.setHgrow(leftSpacer, Priority.ALWAYS);
+        HBox.setHgrow(rightSpacer, Priority.ALWAYS);
+
+        LanguageToggleBar langToggle = new LanguageToggleBar();
+
+        // Balanced header with spacers so title is centered and toggle sits on the right
+        topNavBar.getChildren().addAll(leftSpacer, titleBox, rightSpacer, langToggle);
+
+        // 3. Central Content Card
+        VBox contentBox = new VBox(12);
         contentBox.setAlignment(Pos.CENTER);
         contentBox.setMaxWidth(800);
-        contentBox.setPadding(new Insets(12, 24, 16, 24));
+        contentBox.setPadding(new Insets(10, 24, 14, 24));
         contentBox.setStyle(
                 "-fx-background-color: #1E1E1E; " +
                 "-fx-background-radius: 12px; " +
@@ -105,124 +143,276 @@ public class StartMenu extends VBox {
                 "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 18, 0, 0, 6);"
         );
 
-        // 3. Rule Variant Selector (Egregna vs Tankegna)
-        Label variantHeading = createSectionHeader("1. ደንብ ይምረጡ • Select Rule Variant");
+        // 4. Rule Variant Selector (Egregna vs Tankegna)
+        variantSectionHeader = createSectionHeader("");
+        egregnaTitle = new Label();
+        egregnaTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        egregnaTitle.setTextFill(Color.web("#FFFFFF"));
+
+        egregnaDesc = new Label();
+        egregnaDesc.setFont(Font.font("Segoe UI", 11));
+        egregnaDesc.setTextFill(Color.web("#90A4AE"));
+        egregnaDesc.setWrapText(true);
+
+        tankegnaTitle = new Label();
+        tankegnaTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        tankegnaTitle.setTextFill(Color.web("#FFFFFF"));
+
+        tankegnaDesc = new Label();
+        tankegnaDesc.setFont(Font.font("Segoe UI", 11));
+        tankegnaDesc.setTextFill(Color.web("#90A4AE"));
+        tankegnaDesc.setWrapText(true);
+
         HBox variantCards = createVariantCards();
 
-        // 4. Game Mode Selector (Solo vs AI, Pass & Play, Online)
-        Label modeHeading = createSectionHeader("2. የጨዋታ አይነት • Select Game Mode");
-        HBox modeTabs = createModeTabs();
+        // 5. Game Mode Selector
+        modeSectionHeader = createSectionHeader("");
+        aiModeBtn = createModeButton("", selectedMode == GameMode.HUMAN_VS_AI);
+        passModeBtn = createModeButton("", selectedMode == GameMode.HUMAN_VS_HUMAN);
+        onlineModeBtn = createModeButton("", selectedMode == GameMode.ONLINE_MULTIPLAYER);
 
-        // 5. Dynamic Mode Options Container
-        VBox dynamicOptionsBox = new VBox(10);
-        dynamicOptionsBox.setAlignment(Pos.CENTER);
+        HBox modeTabs = new HBox(12, aiModeBtn, passModeBtn, onlineModeBtn);
+        modeTabs.setAlignment(Pos.CENTER);
 
-        // Player Name Fields
-        HBox namesBox = new HBox(16);
-        namesBox.setAlignment(Pos.CENTER);
+        aiModeBtn.setOnAction(e -> {
+            selectedMode = GameMode.HUMAN_VS_AI;
+            setButtonActive(aiModeBtn, true); setButtonActive(passModeBtn, false); setButtonActive(onlineModeBtn, false);
+            updateModeView();
+        });
+        passModeBtn.setOnAction(e -> {
+            selectedMode = GameMode.HUMAN_VS_HUMAN;
+            setButtonActive(aiModeBtn, false); setButtonActive(passModeBtn, true); setButtonActive(onlineModeBtn, false);
+            updateModeView();
+        });
+        onlineModeBtn.setOnAction(e -> {
+            selectedMode = GameMode.ONLINE_MULTIPLAYER;
+            setButtonActive(aiModeBtn, false); setButtonActive(passModeBtn, false); setButtonActive(onlineModeBtn, true);
+            updateModeView();
+        });
 
+        // 6. Player Names & AI Difficulty
+        p1Label = createSubLabel("");
         p1Field = createTextField("Player 1");
+
+        p2Label = createSubLabel("");
         p2Field = createTextField("Computer");
         p2Field.setDisable(true);
 
-        VBox p1Box = new VBox(4, createSubLabel("ቀይ (Red) Player 1:"), p1Field);
-        VBox p2Box = new VBox(4, createSubLabel("ጥቁር (Black) Player 2:"), p2Field);
-        namesBox.getChildren().addAll(p1Box, p2Box);
+        HBox namesBox = new HBox(16);
+        namesBox.setAlignment(Pos.CENTER);
+        namesBox.getChildren().addAll(new VBox(4, p1Label, p1Field), new VBox(4, p2Label, p2Field));
 
-        // AI Difficulty Chips
-        HBox diffBox = createDifficultyChips();
+        diffSectionLabel = createSubLabel("");
+        easyChip = createChip("", selectedDifficulty == AIDifficulty.EASY);
+        medChip = createChip("", selectedDifficulty == AIDifficulty.MEDIUM);
+        hardChip = createChip("", selectedDifficulty == AIDifficulty.HARD);
 
-        // Online Matchmaking UI (Hidden by default until Online Mode is selected)
-        onlineMatchmakingBox = createOnlineMatchmakingCard();
+        easyChip.setOnAction(e -> {
+            selectedDifficulty = AIDifficulty.EASY;
+            setChipActive(easyChip, true); setChipActive(medChip, false); setChipActive(hardChip, false);
+        });
+        medChip.setOnAction(e -> {
+            selectedDifficulty = AIDifficulty.MEDIUM;
+            setChipActive(easyChip, false); setChipActive(medChip, true); setChipActive(hardChip, false);
+        });
+        hardChip.setOnAction(e -> {
+            selectedDifficulty = AIDifficulty.HARD;
+            setChipActive(easyChip, false); setChipActive(medChip, false); setChipActive(hardChip, true);
+        });
+
+        HBox diffBox = new HBox(10, diffSectionLabel, easyChip, medChip, hardChip);
+        diffBox.setAlignment(Pos.CENTER);
+
+        // 7. Online Matchmaking Box
+        onlineTitle = new Label();
+        onlineTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        onlineTitle.setTextFill(Color.web("#29B6F6"));
+
+        quickMatchBtn = new Button();
+        quickMatchBtn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
+        quickMatchBtn.setTextFill(Color.WHITE);
+        quickMatchBtn.setStyle("-fx-background-color: #0288D1; -fx-background-radius: 6px; -fx-cursor: hand;");
+
+        createRoomBtn = new Button();
+        createRoomBtn.setFont(Font.font("Segoe UI", 12));
+        createRoomBtn.setTextFill(Color.WHITE);
+        createRoomBtn.setStyle("-fx-background-color: #455A64; -fx-background-radius: 6px; -fx-cursor: hand;");
+
+        joinCodeField = new TextField();
+        joinCodeField.setPrefWidth(120);
+        joinCodeField.setStyle("-fx-background-color: #37474F; -fx-text-fill: white; -fx-alignment: center;");
+
+        joinRoomBtn = new Button();
+        joinRoomBtn.setFont(Font.font("Segoe UI", 12));
+        joinRoomBtn.setTextFill(Color.WHITE);
+        joinRoomBtn.setStyle("-fx-background-color: #2E7D32; -fx-background-radius: 6px; -fx-cursor: hand;");
+
+        onlineStatusLabel = new Label();
+        onlineStatusLabel.setFont(Font.font("Segoe UI", 12));
+        onlineStatusLabel.setTextFill(Color.web("#B0BEC5"));
+
+        cancelSearchBtn = new Button();
+        cancelSearchBtn.setFont(Font.font("Segoe UI", 11));
+        cancelSearchBtn.setTextFill(Color.web("#EF5350"));
+        cancelSearchBtn.setStyle("-fx-background-color: #37474F; -fx-background-radius: 4px; -fx-cursor: hand;");
+        cancelSearchBtn.setVisible(false);
+
+        fallbackAIBtn = new Button();
+        fallbackAIBtn.setFont(Font.font("Segoe UI", 11));
+        fallbackAIBtn.setTextFill(Color.web("#FFC107"));
+        fallbackAIBtn.setStyle("-fx-background-color: #37474F; -fx-background-radius: 4px; -fx-cursor: hand;");
+        fallbackAIBtn.setVisible(false);
+
+        quickMatchBtn.setOnAction(e -> startQuickMatch());
+        createRoomBtn.setOnAction(e -> startCreateRoom());
+        joinRoomBtn.setOnAction(e -> startJoinRoom(joinCodeField.getText().trim()));
+        cancelSearchBtn.setOnAction(e -> cancelOnlineSearch());
+        fallbackAIBtn.setOnAction(e -> {
+            cancelOnlineSearch();
+            selectedMode = GameMode.HUMAN_VS_AI;
+            updateModeView();
+            handleStartAction();
+        });
+
+        HBox onlineButtons = new HBox(12, quickMatchBtn, createRoomBtn, joinCodeField, joinRoomBtn);
+        onlineButtons.setAlignment(Pos.CENTER);
+
+        HBox onlineActions = new HBox(10, cancelSearchBtn, fallbackAIBtn);
+        onlineActions.setAlignment(Pos.CENTER);
+
+        onlineMatchmakingBox = new VBox(8, onlineTitle, onlineButtons, onlineStatusLabel, onlineActions);
+        onlineMatchmakingBox.setAlignment(Pos.CENTER);
+        onlineMatchmakingBox.setPadding(new Insets(10));
+        onlineMatchmakingBox.setStyle(
+                "-fx-background-color: #262626; -fx-background-radius: 8px; " +
+                "-fx-border-color: #0288D1; -fx-border-width: 1.5px; -fx-border-radius: 8px;"
+        );
         onlineMatchmakingBox.setVisible(false);
         onlineMatchmakingBox.setManaged(false);
 
-        // 6. Theme Quick Bar
-        HBox themeBar = createThemeQuickBar();
+        VBox dynamicOptionsBox = new VBox(10, namesBox, diffBox, onlineMatchmakingBox);
+        dynamicOptionsBox.setAlignment(Pos.CENTER);
 
-        // 7. Status Banner
-        statusBanner = new Label();
-        statusBanner.setFont(Font.font("Segoe UI", 12));
-        statusBanner.setTextFill(Color.web("#81C784"));
-        statusBanner.setVisible(false);
+        // 8. Theme Quick Bar
+        themeLabel = createSubLabel("");
+        ComboBox<Theme> themeCombo = new ComboBox<>();
+        themeCombo.getItems().addAll(Theme.getPresets());
+        themeCombo.setValue(Theme.getCurrent());
+        themeCombo.setPrefWidth(200);
+        themeCombo.setStyle("-fx-font-size: 11px;");
+        themeCombo.setOnAction(e -> {
+            if (themeCombo.getValue() != null) {
+                Theme.setCurrent(themeCombo.getValue());
+            }
+        });
 
-        // 8. Start Button
-        Button startButton = new Button("▶  ጀምር • START MATCH");
+        customizeBtn = new Button();
+        customizeBtn.setFont(Font.font("Segoe UI", 11));
+        customizeBtn.setTextFill(Color.WHITE);
+        customizeBtn.setStyle("-fx-background-color: #37474F; -fx-background-radius: 4px; -fx-cursor: hand;");
+        customizeBtn.setOnAction(e -> ThemeCustomizerDialog.show((Stage) getScene().getWindow()));
+
+        HBox themeBar = new HBox(10, themeLabel, themeCombo, customizeBtn);
+        themeBar.setAlignment(Pos.CENTER);
+
+        // 9. Start Button
+        startButton = new Button();
         startButton.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
         startButton.setTextFill(Color.WHITE);
         startButton.setPrefWidth(280);
-        startButton.setPadding(new Insets(12, 28, 12, 28));
+        startButton.setPadding(new Insets(10, 28, 10, 28));
         startButton.setStyle(
                 "-fx-background-color: linear-gradient(to right, #2E7D32, #1B5E20); " +
-                "-fx-background-radius: 8px; " +
-                "-fx-border-color: #4CAF50; " +
-                "-fx-border-radius: 8px; " +
-                "-fx-cursor: hand; " +
-                "-fx-font-weight: bold;"
-        );
-        startButton.setOnMouseEntered(e -> startButton.setStyle(
-                "-fx-background-color: linear-gradient(to right, #388E3C, #2E7D32); " +
-                "-fx-background-radius: 8px; -fx-border-color: #81C784; -fx-border-radius: 8px; -fx-cursor: hand;"
-        ));
-        startButton.setOnMouseExited(e -> startButton.setStyle(
-                "-fx-background-color: linear-gradient(to right, #2E7D32, #1B5E20); " +
                 "-fx-background-radius: 8px; -fx-border-color: #4CAF50; -fx-border-radius: 8px; -fx-cursor: hand;"
-        ));
-
+        );
         startButton.setOnAction(e -> handleStartAction());
 
-        // Assembly
-        dynamicOptionsBox.getChildren().addAll(namesBox, diffBox, onlineMatchmakingBox);
-
         contentBox.getChildren().addAll(
-                variantHeading, variantCards,
-                modeHeading, modeTabs,
+                variantSectionHeader, variantCards,
+                modeSectionHeader, modeTabs,
                 dynamicOptionsBox,
                 themeBar,
-                statusBanner,
                 startButton
         );
 
         // Bottom Tibeb border
         TibebBanner tibebBottom = new TibebBanner(920, 16);
 
-        getChildren().addAll(tibebTop, headerBox, contentBox, tibebBottom);
+        getChildren().addAll(tibebTop, topNavBar, contentBox, tibebBottom);
 
-        // Initialize UI view states
+        // Listen for Language changes
+        I18n.addListener(lang -> Platform.runLater(this::updateLanguage));
+
+        // Initial Language setup
+        updateLanguage();
         updateModeView();
     }
 
-    // --- Component Builders ---
+    /**
+     * Updates all UI text dynamically according to the active language.
+     */
+    private void updateLanguage() {
+        mainTitle.setText(I18n.get("app.title"));
+        subtitle.setText(I18n.get("app.subtitle"));
 
-    private Label createSectionHeader(String title) {
-        Label lbl = new Label(title);
-        lbl.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
-        lbl.setTextFill(Color.web("#FFC107"));
-        return lbl;
-    }
+        variantSectionHeader.setText(I18n.get("section.rules"));
+        egregnaTitle.setText(I18n.get("variant.egregna.title"));
+        egregnaDesc.setText(I18n.get("variant.egregna.desc"));
+        tankegnaTitle.setText(I18n.get("variant.tankegna.title"));
+        tankegnaDesc.setText(I18n.get("variant.tankegna.desc"));
 
-    private Label createSubLabel(String title) {
-        Label lbl = new Label(title);
-        lbl.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 11));
-        lbl.setTextFill(Color.web("#B0BEC5"));
-        return lbl;
+        modeSectionHeader.setText(I18n.get("section.modes"));
+        aiModeBtn.setText(I18n.get("mode.ai"));
+        passModeBtn.setText(I18n.get("mode.pass"));
+        onlineModeBtn.setText(I18n.get("mode.online"));
+
+        diffSectionLabel.setText(I18n.get("ai.difficulty"));
+        easyChip.setText(I18n.get("diff.easy"));
+        medChip.setText(I18n.get("diff.medium"));
+        hardChip.setText(I18n.get("diff.hard"));
+
+        p1Label.setText(I18n.get("player.1"));
+        p2Label.setText(I18n.get("player.2"));
+
+        onlineTitle.setText(I18n.get("online.title"));
+        quickMatchBtn.setText(I18n.get("online.quick_match"));
+        createRoomBtn.setText(I18n.get("online.create_room"));
+        joinRoomBtn.setText(I18n.get("online.join"));
+        joinCodeField.setPromptText(I18n.get("online.code_prompt"));
+        onlineStatusLabel.setText(I18n.get("online.hint"));
+        cancelSearchBtn.setText(I18n.get("online.cancel"));
+        fallbackAIBtn.setText(I18n.get("online.play_ai"));
+
+        themeLabel.setText(I18n.get("theme.label"));
+        customizeBtn.setText(I18n.get("theme.customize"));
+        startButton.setText(I18n.get("btn.start"));
+
+        // Update default player 2 name text based on active mode
+        if (selectedMode == GameMode.HUMAN_VS_AI) {
+            p2Field.setText(I18n.get("player.computer"));
+        } else if (selectedMode == GameMode.ONLINE_MULTIPLAYER) {
+            p2Field.setText(I18n.get("player.online_opponent"));
+        }
     }
 
     private HBox createVariantCards() {
         HBox box = new HBox(16);
         box.setAlignment(Pos.CENTER);
 
-        VBox egregnaCard = createCard(
-                "🛡️ እግረኛ (Egregna)",
-                "Foot Soldier Mode\n• Regular: Move & Capture forward only\n• King: 1-step Short King in all 4 diagonals",
-                selectedVariant == DamaVariant.EGREGNA
-        );
+        VBox egregnaCard = new VBox(4, egregnaTitle, egregnaDesc);
+        egregnaCard.setAlignment(Pos.CENTER_LEFT);
+        egregnaCard.setPrefWidth(350);
+        egregnaCard.setPadding(new Insets(10, 14, 10, 14));
+        egregnaCard.setCursor(javafx.scene.Cursor.HAND);
 
-        VBox tankegnaCard = createCard(
-                "⚡ ታንከኛ (Tankegna)",
-                "Armored Tank Mode\n• Regular: 4-Way multi-directional jump\n• King: Long-range Flying King (Bishop slide)",
-                selectedVariant == DamaVariant.TANKEGNA
-        );
+        VBox tankegnaCard = new VBox(4, tankegnaTitle, tankegnaDesc);
+        tankegnaCard.setAlignment(Pos.CENTER_LEFT);
+        tankegnaCard.setPrefWidth(350);
+        tankegnaCard.setPadding(new Insets(10, 14, 10, 14));
+        tankegnaCard.setCursor(javafx.scene.Cursor.HAND);
+
+        updateCardSelection(egregnaCard, selectedVariant == DamaVariant.EGREGNA);
+        updateCardSelection(tankegnaCard, selectedVariant == DamaVariant.TANKEGNA);
 
         egregnaCard.setOnMouseClicked(e -> {
             selectedVariant = DamaVariant.EGREGNA;
@@ -240,214 +430,32 @@ public class StartMenu extends VBox {
         return box;
     }
 
-    private HBox createModeTabs() {
-        HBox box = new HBox(12);
-        box.setAlignment(Pos.CENTER);
-
-        Button aiBtn = createModeButton("🤖 ነጠላ ተጫዋች (Solo vs AI)", selectedMode == GameMode.HUMAN_VS_AI);
-        Button passBtn = createModeButton("👥 ሁለት ተጫዋች (Pass & Play)", selectedMode == GameMode.HUMAN_VS_HUMAN);
-        Button onlineBtn = createModeButton("🌐 የመስመር ላይ (Online)", selectedMode == GameMode.ONLINE_MULTIPLAYER);
-
-        aiBtn.setOnAction(e -> {
-            selectedMode = GameMode.HUMAN_VS_AI;
-            setButtonActive(aiBtn, true);
-            setButtonActive(passBtn, false);
-            setButtonActive(onlineBtn, false);
-            updateModeView();
-        });
-
-        passBtn.setOnAction(e -> {
-            selectedMode = GameMode.HUMAN_VS_HUMAN;
-            setButtonActive(aiBtn, false);
-            setButtonActive(passBtn, true);
-            setButtonActive(onlineBtn, false);
-            updateModeView();
-        });
-
-        onlineBtn.setOnAction(e -> {
-            selectedMode = GameMode.ONLINE_MULTIPLAYER;
-            setButtonActive(aiBtn, false);
-            setButtonActive(passBtn, false);
-            setButtonActive(onlineBtn, true);
-            updateModeView();
-        });
-
-        box.getChildren().addAll(aiBtn, passBtn, onlineBtn);
-        return box;
-    }
-
-    private HBox createDifficultyChips() {
-        HBox box = new HBox(10);
-        box.setAlignment(Pos.CENTER);
-
-        Label label = createSubLabel("AI ደረጃ (Difficulty):");
-
-        Button easy = createChip("ቀላል (Easy)", selectedDifficulty == AIDifficulty.EASY);
-        Button med = createChip("መካከለኛ (Medium)", selectedDifficulty == AIDifficulty.MEDIUM);
-        Button hard = createChip("ከባድ (Hard)", selectedDifficulty == AIDifficulty.HARD);
-
-        easy.setOnAction(e -> {
-            selectedDifficulty = AIDifficulty.EASY;
-            setChipActive(easy, true); setChipActive(med, false); setChipActive(hard, false);
-        });
-        med.setOnAction(e -> {
-            selectedDifficulty = AIDifficulty.MEDIUM;
-            setChipActive(easy, false); setChipActive(med, true); setChipActive(hard, false);
-        });
-        hard.setOnAction(e -> {
-            selectedDifficulty = AIDifficulty.HARD;
-            setChipActive(easy, false); setChipActive(med, false); setChipActive(hard, true);
-        });
-
-        box.getChildren().addAll(label, easy, med, hard);
-        return box;
-    }
-
-    private VBox createOnlineMatchmakingCard() {
-        VBox card = new VBox(10);
-        card.setAlignment(Pos.CENTER);
-        card.setPadding(new Insets(12));
-        card.setStyle(
-                "-fx-background-color: #262626; -fx-background-radius: 8px; " +
-                "-fx-border-color: #0288D1; -fx-border-width: 1.5px; -fx-border-radius: 8px;"
-        );
-
-        Label title = new Label("🌐 የኢንተርኔት ጨዋታ • Online Matchmaking");
-        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
-        title.setTextFill(Color.web("#29B6F6"));
-
-        // Matchmaking Sub-modes: Quick Match vs Private Room
-        HBox matchOptions = new HBox(12);
-        matchOptions.setAlignment(Pos.CENTER);
-
-        Button quickMatchBtn = new Button("⚡ ፈጣን ግጥሚያ • Quick Match");
-        quickMatchBtn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
-        quickMatchBtn.setTextFill(Color.WHITE);
-        quickMatchBtn.setStyle("-fx-background-color: #0288D1; -fx-background-radius: 6px; -fx-cursor: hand;");
-
-        Button createRoomBtn = new Button("🔒 ክፍል ፍጠር • Create Room");
-        createRoomBtn.setFont(Font.font("Segoe UI", 12));
-        createRoomBtn.setTextFill(Color.WHITE);
-        createRoomBtn.setStyle("-fx-background-color: #455A64; -fx-background-radius: 6px; -fx-cursor: hand;");
-
-        TextField joinCodeField = new TextField();
-        joinCodeField.setPromptText("Code (e.g. 4821)");
-        joinCodeField.setPrefWidth(120);
-        joinCodeField.setStyle("-fx-background-color: #37474F; -fx-text-fill: white; -fx-alignment: center;");
-
-        Button joinRoomBtn = new Button("ግባ • Join");
-        joinRoomBtn.setFont(Font.font("Segoe UI", 12));
-        joinRoomBtn.setTextFill(Color.WHITE);
-        joinRoomBtn.setStyle("-fx-background-color: #2E7D32; -fx-background-radius: 6px; -fx-cursor: hand;");
-
-        matchOptions.getChildren().addAll(quickMatchBtn, createRoomBtn, joinCodeField, joinRoomBtn);
-
-        // Searching / Waiting Status box
-        VBox statusBox = new VBox(6);
-        statusBox.setAlignment(Pos.CENTER);
-
-        onlineStatusLabel = new Label("Select Quick Match or enter a room code.");
-        onlineStatusLabel.setFont(Font.font("Segoe UI", 12));
-        onlineStatusLabel.setTextFill(Color.web("#B0BEC5"));
-
-        HBox actionBox = new HBox(10);
-        actionBox.setAlignment(Pos.CENTER);
-
-        cancelSearchBtn = new Button("✕ ሰርዝ • Cancel");
-        cancelSearchBtn.setFont(Font.font("Segoe UI", 11));
-        cancelSearchBtn.setTextFill(Color.web("#EF5350"));
-        cancelSearchBtn.setStyle("-fx-background-color: #37474F; -fx-background-radius: 4px; -fx-cursor: hand;");
-        cancelSearchBtn.setVisible(false);
-
-        fallbackAIBtn = new Button("🤖 ከኮምፒውተር ጋር ተጫወት • Play AI");
-        fallbackAIBtn.setFont(Font.font("Segoe UI", 11));
-        fallbackAIBtn.setTextFill(Color.web("#FFC107"));
-        fallbackAIBtn.setStyle("-fx-background-color: #37474F; -fx-background-radius: 4px; -fx-cursor: hand;");
-        fallbackAIBtn.setVisible(false);
-
-        actionBox.getChildren().addAll(cancelSearchBtn, fallbackAIBtn);
-        statusBox.getChildren().addAll(onlineStatusLabel, actionBox);
-
-        // Action Handlers
-        quickMatchBtn.setOnAction(e -> startQuickMatch());
-        createRoomBtn.setOnAction(e -> startCreateRoom());
-        joinRoomBtn.setOnAction(e -> startJoinRoom(joinCodeField.getText().trim()));
-        cancelSearchBtn.setOnAction(e -> cancelOnlineSearch());
-        fallbackAIBtn.setOnAction(e -> {
-            cancelOnlineSearch();
-            selectedMode = GameMode.HUMAN_VS_AI;
-            updateModeView();
-            handleStartAction();
-        });
-
-        card.getChildren().addAll(title, matchOptions, statusBox);
-        return card;
-    }
-
-    private HBox createThemeQuickBar() {
-        HBox box = new HBox(10);
-        box.setAlignment(Pos.CENTER);
-
-        Label label = createSubLabel("መልክ • Theme:");
-
-        ComboBox<Theme> themeCombo = new ComboBox<>();
-        themeCombo.getItems().addAll(Theme.getPresets());
-        themeCombo.setValue(Theme.getCurrent());
-        themeCombo.setPrefWidth(200);
-        themeCombo.setStyle("-fx-font-size: 11px;");
-        themeCombo.setOnAction(e -> {
-            if (themeCombo.getValue() != null) {
-                Theme.setCurrent(themeCombo.getValue());
-            }
-        });
-
-        Button customizeBtn = new Button("🎨 Customize...");
-        customizeBtn.setFont(Font.font("Segoe UI", 11));
-        customizeBtn.setTextFill(Color.WHITE);
-        customizeBtn.setStyle("-fx-background-color: #37474F; -fx-background-radius: 4px; -fx-cursor: hand;");
-        customizeBtn.setOnAction(e -> ThemeCustomizerDialog.show((Stage) getScene().getWindow()));
-
-        box.getChildren().addAll(label, themeCombo, customizeBtn);
-        return box;
-    }
-
-    // --- Styling Helpers ---
-
-    private VBox createCard(String title, String desc, boolean active) {
-        VBox card = new VBox(4);
-        card.setAlignment(Pos.CENTER_LEFT);
-        card.setPrefWidth(350);
-        card.setPadding(new Insets(10, 14, 10, 14));
-        card.setCursor(javafx.scene.Cursor.HAND);
-
-        Label titleLbl = new Label(title);
-        titleLbl.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
-        titleLbl.setTextFill(Color.web("#FFFFFF"));
-
-        Label descLbl = new Label(desc);
-        descLbl.setFont(Font.font("Segoe UI", 11));
-        descLbl.setTextFill(Color.web("#90A4AE"));
-        descLbl.setWrapText(true);
-
-        card.getChildren().addAll(titleLbl, descLbl);
-        updateCardSelection(card, active);
-        return card;
-    }
-
     private void updateCardSelection(VBox card, boolean active) {
         if (active) {
             card.setStyle(
-                    "-fx-background-color: #2E3B2E; " +
-                    "-fx-border-color: #FFC107; -fx-border-width: 2px; -fx-border-radius: 8px; " +
-                    "-fx-background-radius: 8px;"
+                    "-fx-background-color: #2E3B2E; -fx-border-color: #FFC107; -fx-border-width: 2px; " +
+                    "-fx-border-radius: 8px; -fx-background-radius: 8px;"
             );
         } else {
             card.setStyle(
-                    "-fx-background-color: #262626; " +
-                    "-fx-border-color: #424242; -fx-border-width: 1px; -fx-border-radius: 8px; " +
-                    "-fx-background-radius: 8px;"
+                    "-fx-background-color: #262626; -fx-border-color: #424242; -fx-border-width: 1px; " +
+                    "-fx-border-radius: 8px; -fx-background-radius: 8px;"
             );
         }
+    }
+
+    private Label createSectionHeader(String title) {
+        Label lbl = new Label(title);
+        lbl.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        lbl.setTextFill(Color.web("#FFC107"));
+        return lbl;
+    }
+
+    private Label createSubLabel(String title) {
+        Label lbl = new Label(title);
+        lbl.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 11));
+        lbl.setTextFill(Color.web("#B0BEC5"));
+        return lbl;
     }
 
     private Button createModeButton(String text, boolean active) {
@@ -505,13 +513,13 @@ public class StartMenu extends VBox {
         onlineMatchmakingBox.setManaged(isOnline);
 
         if (isAI) {
-            p2Field.setText("Computer");
+            p2Field.setText(I18n.get("player.computer"));
             p2Field.setDisable(true);
         } else if (isOnline) {
-            p2Field.setText("Online Opponent");
+            p2Field.setText(I18n.get("player.online_opponent"));
             p2Field.setDisable(true);
         } else {
-            p2Field.setText("Player 2");
+            p2Field.setText(I18n.getCurrentLanguage() == Language.AMHARIC ? "ተጫዋች 2" : "Player 2");
             p2Field.setDisable(false);
         }
     }
@@ -524,7 +532,6 @@ public class StartMenu extends VBox {
             return;
         }
 
-        // Try connecting to default server; if offline, auto-start embedded server!
         new Thread(() -> {
             try {
                 networkClient = new NetworkClient("127.0.0.1", 8989);
@@ -532,8 +539,6 @@ public class StartMenu extends VBox {
                 networkClient.connect(p1Field.getText().trim());
                 Platform.runLater(onSuccess);
             } catch (IOException ex) {
-                // Auto-start embedded server for seamless local testing
-                System.out.println("Starting embedded relay server on port 8989...");
                 MatchmakingServer.startEmbedded(8989);
                 try {
                     Thread.sleep(150);
@@ -544,7 +549,7 @@ public class StartMenu extends VBox {
                 } catch (Exception e) {
                     Platform.runLater(() -> {
                         onlineStatusLabel.setTextFill(Color.web("#EF5350"));
-                        onlineStatusLabel.setText("Failed to connect to relay server: " + e.getMessage());
+                        onlineStatusLabel.setText("Connection failed: " + e.getMessage());
                     });
                 }
             }
@@ -555,13 +560,13 @@ public class StartMenu extends VBox {
         networkClient.setListener(new NetworkEventListener() {
             @Override
             public void onConnected() {
-                Platform.runLater(() -> onlineStatusLabel.setText("Connected to Matchmaking Server."));
+                Platform.runLater(() -> onlineStatusLabel.setText(I18n.get("online.hint")));
             }
 
             @Override
             public void onWaitingInQueue() {
                 Platform.runLater(() -> {
-                    startSearchingAnimation("ተጫዋች በመፈለግ ላይ • Searching for opponent");
+                    startSearchingAnimation(I18n.get("online.searching"));
                     cancelSearchBtn.setVisible(true);
                     fallbackAIBtn.setVisible(true);
                 });
@@ -571,7 +576,7 @@ public class StartMenu extends VBox {
             public void onRoomCreated(String roomCode) {
                 Platform.runLater(() -> {
                     createdRoomCode = roomCode;
-                    startSearchingAnimation("ክፍል #" + roomCode + " ተፈጥሯል • Waiting for friend");
+                    startSearchingAnimation(I18n.get("online.room_created", roomCode));
                     cancelSearchBtn.setVisible(true);
                 });
             }
@@ -585,9 +590,7 @@ public class StartMenu extends VBox {
             }
 
             @Override
-            public void onOpponentMove(com.dama.ethiopiancheckersgame.core.model.Move move) {
-                // Handled in NetworkPlayer during gameplay
-            }
+            public void onOpponentMove(com.dama.ethiopiancheckersgame.core.model.Move move) {}
 
             @Override
             public void onOpponentDrawOffer() {}
@@ -606,7 +609,7 @@ public class StartMenu extends VBox {
                 Platform.runLater(() -> {
                     stopSearchingAnimation();
                     onlineStatusLabel.setTextFill(Color.web("#EF5350"));
-                    onlineStatusLabel.setText("Opponent disconnected.");
+                    onlineStatusLabel.setText(I18n.get("online.disconnected"));
                 });
             }
 
@@ -615,7 +618,7 @@ public class StartMenu extends VBox {
                 Platform.runLater(() -> {
                     stopSearchingAnimation();
                     onlineStatusLabel.setTextFill(Color.web("#EF5350"));
-                    onlineStatusLabel.setText("Error: " + errorMessage);
+                    onlineStatusLabel.setText(errorMessage);
                 });
             }
         });
@@ -624,7 +627,7 @@ public class StartMenu extends VBox {
     private void startQuickMatch() {
         ensureNetworkConnected(() -> {
             onlineStatusLabel.setTextFill(Color.web("#29B6F6"));
-            onlineStatusLabel.setText("Joining public matchmaking queue...");
+            onlineStatusLabel.setText(I18n.get("online.searching") + "...");
             networkClient.findQuickMatch(selectedVariant);
         });
     }
@@ -632,7 +635,7 @@ public class StartMenu extends VBox {
     private void startCreateRoom() {
         ensureNetworkConnected(() -> {
             onlineStatusLabel.setTextFill(Color.web("#29B6F6"));
-            onlineStatusLabel.setText("Creating private room...");
+            onlineStatusLabel.setText(I18n.get("online.create_room") + "...");
             networkClient.createRoom(selectedVariant);
         });
     }
@@ -640,12 +643,12 @@ public class StartMenu extends VBox {
     private void startJoinRoom(String code) {
         if (code.isEmpty()) {
             onlineStatusLabel.setTextFill(Color.web("#EF5350"));
-            onlineStatusLabel.setText("Please enter a 4-digit room code.");
+            onlineStatusLabel.setText(I18n.get("online.code_prompt"));
             return;
         }
         ensureNetworkConnected(() -> {
             onlineStatusLabel.setTextFill(Color.web("#29B6F6"));
-            onlineStatusLabel.setText("Joining room #" + code + "...");
+            onlineStatusLabel.setText(I18n.get("online.join") + " #" + code + "...");
             networkClient.joinRoom(code);
         });
     }
@@ -656,7 +659,7 @@ public class StartMenu extends VBox {
         }
         stopSearchingAnimation();
         onlineStatusLabel.setTextFill(Color.web("#B0BEC5"));
-        onlineStatusLabel.setText("Matchmaking cancelled.");
+        onlineStatusLabel.setText(I18n.get("online.hint"));
         cancelSearchBtn.setVisible(false);
         fallbackAIBtn.setVisible(false);
     }
@@ -683,7 +686,7 @@ public class StartMenu extends VBox {
     private void startOnlineSession(PieceColor yourColor, String opponentName, DamaVariant variant) {
         DamaRuleStrategy rules = (variant == DamaVariant.EGREGNA) ? new EgregnaRules() : new TankegnaRules();
         String localName = p1Field.getText().trim();
-        if (localName.isEmpty()) localName = "Player";
+        if (localName.isEmpty()) localName = "Player 1";
 
         Player player1;
         Player player2;
@@ -707,17 +710,17 @@ public class StartMenu extends VBox {
         }
 
         String p1Name = p1Field.getText().trim();
-        if (p1Name.isEmpty()) p1Name = "Player 1";
+        if (p1Name.isEmpty()) p1Name = (I18n.getCurrentLanguage() == Language.AMHARIC) ? "ተጫዋች 1" : "Player 1";
 
         DamaRuleStrategy rules = (selectedVariant == DamaVariant.EGREGNA) ? new EgregnaRules() : new TankegnaRules();
         Player player1 = new HumanPlayer(p1Name, PieceColor.RED);
         Player player2;
 
         if (selectedMode == GameMode.HUMAN_VS_AI) {
-            player2 = new AIPlayer("Computer", PieceColor.BLACK, selectedDifficulty, rules);
+            player2 = new AIPlayer(I18n.get("player.computer"), PieceColor.BLACK, selectedDifficulty, rules);
         } else {
             String p2Name = p2Field.getText().trim();
-            if (p2Name.isEmpty()) p2Name = "Player 2";
+            if (p2Name.isEmpty()) p2Name = (I18n.getCurrentLanguage() == Language.AMHARIC) ? "ተጫዋች 2" : "Player 2";
             player2 = new HumanPlayer(p2Name, PieceColor.BLACK);
         }
 

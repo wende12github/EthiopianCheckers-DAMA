@@ -10,6 +10,8 @@ import com.dama.ethiopiancheckersgame.network.NetworkEventListener;
 import com.dama.ethiopiancheckersgame.player.HumanPlayer;
 import com.dama.ethiopiancheckersgame.player.NetworkPlayer;
 import com.dama.ethiopiancheckersgame.player.Player;
+import com.dama.ethiopiancheckersgame.ui.i18n.I18n;
+import com.dama.ethiopiancheckersgame.ui.i18n.Language;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -88,19 +90,24 @@ public class GameScene extends BorderPane implements GameEventListener {
         HBox buttonBox = new HBox(12);
         buttonBox.setAlignment(Pos.CENTER);
 
-        Button newGameBtn = new Button("▶  New Game");
+        Button newGameBtn = new Button(I18n.get("btn.new_game"));
         newGameBtn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         newGameBtn.setTextFill(Color.WHITE);
         newGameBtn.setPadding(new Insets(10, 16, 10, 16));
         newGameBtn.setStyle("-fx-background-color: #2E7D32; -fx-background-radius: 6px; -fx-cursor: hand;");
         newGameBtn.setOnAction(e -> handleRestart());
 
-        Button reviewBtn = new Button("🔍  Review Game");
+        Button reviewBtn = new Button(I18n.get("btn.review_game"));
         reviewBtn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         reviewBtn.setTextFill(Color.WHITE);
         reviewBtn.setPadding(new Insets(10, 16, 10, 16));
         reviewBtn.setStyle("-fx-background-color: #0288D1; -fx-background-radius: 6px; -fx-cursor: hand;");
         reviewBtn.setOnAction(e -> handleReview());
+
+        I18n.addListener(lang -> Platform.runLater(() -> {
+            newGameBtn.setText(I18n.get("btn.new_game"));
+            reviewBtn.setText(I18n.get("btn.review_game"));
+        }));
 
         buttonBox.getChildren().addAll(newGameBtn, reviewBtn);
         this.gameOverOverlay.getChildren().addAll(trophyLabel, titleLabel, winnerNameLabel, reasonLabel, buttonBox);
@@ -259,16 +266,17 @@ public class GameScene extends BorderPane implements GameEventListener {
     }
 
     private void showGameOverOverlay(Player winner, String reason) {
+        boolean isAm = (I18n.getCurrentLanguage() == Language.AMHARIC);
         if (winner == null) {
             trophyLabel.setText("🤝");
-            titleLabel.setText("MATCH DRAWN (አቻ)");
+            titleLabel.setText(isAm ? "አቻ ተጠናቀቀ" : "MATCH DRAWN");
             titleLabel.setTextFill(Color.web("#90A4AE"));
-            winnerNameLabel.setText("Result: Draw (No Winner)");
+            winnerNameLabel.setText(isAm ? "ውጤት: አቻ (ያለ አሸናፊ)" : "Result: Draw (No Winner)");
         } else {
             trophyLabel.setText("👑");
-            titleLabel.setText("GAME CONCLUDED");
+            titleLabel.setText(I18n.get("game.concluded"));
             titleLabel.setTextFill(Color.web("#FFD54F"));
-            winnerNameLabel.setText("Winner: " + winner.getName());
+            winnerNameLabel.setText((isAm ? "አሸናፊ: " : "Winner: ") + winner.getName());
         }
         reasonLabel.setText(reason);
         gameOverOverlay.setVisible(true);
