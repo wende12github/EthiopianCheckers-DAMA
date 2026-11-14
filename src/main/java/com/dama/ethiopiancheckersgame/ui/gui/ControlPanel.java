@@ -6,7 +6,9 @@ import com.dama.ethiopiancheckersgame.engine.GameSession;
 import com.dama.ethiopiancheckersgame.player.Player;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -17,6 +19,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import java.util.Optional;
 
 /**
  * Isolated status and control sidebar panel.
@@ -132,13 +135,16 @@ public class ControlPanel extends VBox {
         Button undoBtn = createStyledButton("⤺ Undo Move", "#546E7A");
         undoBtn.setOnAction(e -> onUndoRequested.run());
 
+        Button drawBtn = createStyledButton("🤝 Offer Draw", "#455A64");
+        drawBtn.setOnAction(e -> handleDrawOffer());
+
         Button themeBtn = createStyledButton("🎨 Theme / Colors", "#00838F");
         themeBtn.setOnAction(e -> ThemeCustomizerDialog.show((Stage) getScene().getWindow()));
 
-        Button restartBtn = createStyledButton("↻ Restart Game", "#455A64");
+        Button restartBtn = createStyledButton("↻ Restart Game", "#37474F");
         restartBtn.setOnAction(e -> onRestartRequested.run());
 
-        Button menuBtn = createStyledButton("☰ Main Menu", "#37474F");
+        Button menuBtn = createStyledButton("☰ Main Menu", "#263238");
         menuBtn.setOnAction(e -> onMenuRequested.run());
 
         Region spacer = new Region();
@@ -151,10 +157,36 @@ public class ControlPanel extends VBox {
                 gameOverBox,
                 p1Card, p2Card,
                 spacer,
-                undoBtn, themeBtn, restartBtn, menuBtn
+                undoBtn, drawBtn, themeBtn, restartBtn, menuBtn
         );
 
         updateState();
+    }
+
+    private void handleDrawOffer() {
+        if (!session.isRunning()) return;
+
+        if (session.getGameMode() == com.dama.ethiopiancheckersgame.engine.GameMode.HUMAN_VS_AI) {
+            boolean accepted = session.offerDraw(session.getCurrentPlayer());
+            if (!accepted) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                        "The Computer evaluated the current position and determined there is still a chance to find a winner. The draw offer was declined.",
+                        ButtonType.OK);
+                alert.setTitle("Draw Offer Declined");
+                alert.setHeaderText("AI Continues Playing");
+                alert.showAndWait();
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                    "A draw has been offered. Does the opponent accept?",
+                    ButtonType.YES, ButtonType.NO);
+            alert.setTitle("Draw Offer");
+            alert.setHeaderText("Mutual Draw Proposed");
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.YES) {
+                session.declareDraw("Mutual agreement between players.");
+            }
+        }
     }
 
     private VBox createPlayerCard(String name, Circle colorIndicator) {
@@ -210,6 +242,9 @@ public class ControlPanel extends VBox {
             if (isReviewMode) {
                 turnBanner.setText("🔍 Review Mode");
                 turnBanner.setStyle("-fx-background-color: #0288D1; -fx-background-radius: 6px;");
+            } else if (session.getCurrentState().isDraw()) {
+                turnBanner.setText("Match Drawn (አቻ)");
+                turnBanner.setStyle("-fx-background-color: #546E7A; -fx-background-radius: 6px;");
             } else {
                 turnBanner.setText("Game Over!");
                 turnBanner.setStyle("-fx-background-color: #D32F2F; -fx-background-radius: 6px;");

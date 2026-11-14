@@ -11,6 +11,7 @@ public class GameState {
     private final Board board;
     private PieceColor currentTurn;
     private boolean isGameOver;
+    private boolean isDraw;
     private PieceColor winner;
     private String gameOverReason;
     private final List<Move> moveHistory;
@@ -19,6 +20,7 @@ public class GameState {
         this.board = new Board();
         this.currentTurn = PieceColor.RED; // Red moves first
         this.isGameOver = false;
+        this.isDraw = false;
         this.winner = null;
         this.gameOverReason = "";
         this.moveHistory = new ArrayList<>();
@@ -28,6 +30,7 @@ public class GameState {
         this.board = board;
         this.currentTurn = currentTurn;
         this.isGameOver = false;
+        this.isDraw = false;
         this.winner = null;
         this.gameOverReason = "";
         this.moveHistory = new ArrayList<>();
@@ -56,7 +59,19 @@ public class GameState {
     public void setGameOver(PieceColor winner, String reason) {
         this.isGameOver = true;
         this.winner = winner;
+        this.isDraw = false;
         this.gameOverReason = reason;
+    }
+
+    public void setDraw(String reason) {
+        this.isGameOver = true;
+        this.winner = null;
+        this.isDraw = true;
+        this.gameOverReason = "Match Drawn: " + reason;
+    }
+
+    public boolean isDraw() {
+        return isDraw;
     }
 
     public PieceColor getWinner() {
@@ -78,6 +93,7 @@ public class GameState {
     public GameState copy() {
         GameState copy = new GameState(board.copy(), currentTurn);
         copy.isGameOver = this.isGameOver;
+        copy.isDraw = this.isDraw;
         copy.winner = this.winner;
         copy.gameOverReason = this.gameOverReason;
         copy.moveHistory.addAll(this.moveHistory);

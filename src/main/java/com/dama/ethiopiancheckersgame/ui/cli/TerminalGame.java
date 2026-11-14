@@ -87,13 +87,38 @@ public class TerminalGame {
                 System.out.println("AI plays: " + aiMove);
                 session.makeMove(aiMove);
             } else {
-                System.out.println("Available legal moves:");
+                System.out.println("Available legal moves (or type 'D' to offer draw):");
                 for (int i = 0; i < legalMoves.size(); i++) {
                     System.out.printf("[%d] %s%n", (i + 1), legalMoves.get(i));
                 }
-                System.out.print("Select move (1-" + legalMoves.size() + "): ");
+                System.out.print("Select move (1-" + legalMoves.size() + " or D): ");
+                String inputStr = scanner.nextLine().trim();
+
+                if ("D".equalsIgnoreCase(inputStr) || "draw".equalsIgnoreCase(inputStr)) {
+                    if (session.getGameMode() == GameMode.HUMAN_VS_AI) {
+                        boolean accepted = session.offerDraw(current);
+                        if (accepted) {
+                            System.out.println(">>> Computer accepted the draw offer!");
+                            break;
+                        } else {
+                            System.out.println(">>> Computer evaluated the position and declined the draw offer (thinks it has a winning chance).");
+                            continue;
+                        }
+                    } else {
+                        System.out.print("Opponent, do you accept the draw offer? (y/n): ");
+                        String resp = scanner.nextLine().trim();
+                        if ("y".equalsIgnoreCase(resp)) {
+                            session.declareDraw("Mutual agreement between players.");
+                            break;
+                        } else {
+                            System.out.println("Draw offer was declined.");
+                            continue;
+                        }
+                    }
+                }
+
                 try {
-                    int moveIdx = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                    int moveIdx = Integer.parseInt(inputStr) - 1;
                     if (moveIdx >= 0 && moveIdx < legalMoves.size()) {
                         session.makeMove(legalMoves.get(moveIdx));
                     } else {

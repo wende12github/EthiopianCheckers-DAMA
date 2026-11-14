@@ -28,6 +28,8 @@ public class GameScene extends BorderPane implements GameEventListener {
     private final BoardCanvas boardCanvas;
     private final ControlPanel controlPanel;
     private final VBox gameOverOverlay;
+    private final Label trophyLabel;
+    private final Label titleLabel;
     private final Label winnerNameLabel;
     private final Label reasonLabel;
 
@@ -57,12 +59,12 @@ public class GameScene extends BorderPane implements GameEventListener {
         this.gameOverOverlay.setVisible(false);
         this.gameOverOverlay.setManaged(false);
 
-        Label trophyLabel = new Label("👑");
-        trophyLabel.setFont(Font.font("Segoe UI Emoji, Arial", 38));
+        this.trophyLabel = new Label("👑");
+        this.trophyLabel.setFont(Font.font("Segoe UI Emoji, Arial", 38));
 
-        Label titleLabel = new Label("GAME CONCLUDED");
-        titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
-        titleLabel.setTextFill(Color.web("#FFD54F"));
+        this.titleLabel = new Label("GAME CONCLUDED");
+        this.titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
+        this.titleLabel.setTextFill(Color.web("#FFD54F"));
 
         this.winnerNameLabel = new Label();
         this.winnerNameLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
@@ -153,7 +155,17 @@ public class GameScene extends BorderPane implements GameEventListener {
     }
 
     private void showGameOverOverlay(Player winner, String reason) {
-        winnerNameLabel.setText("Winner: " + winner.getName());
+        if (winner == null) {
+            trophyLabel.setText("🤝");
+            titleLabel.setText("MATCH DRAWN (አቻ)");
+            titleLabel.setTextFill(Color.web("#90A4AE"));
+            winnerNameLabel.setText("Result: Draw (No Winner)");
+        } else {
+            trophyLabel.setText("👑");
+            titleLabel.setText("GAME CONCLUDED");
+            titleLabel.setTextFill(Color.web("#FFD54F"));
+            winnerNameLabel.setText("Winner: " + winner.getName());
+        }
         reasonLabel.setText(reason);
         gameOverOverlay.setVisible(true);
         gameOverOverlay.setManaged(true);

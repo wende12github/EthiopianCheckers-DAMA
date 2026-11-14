@@ -10,28 +10,36 @@ public class TestRunner {
         int passed = 0;
         int failed = 0;
 
-        Class<?> testClass = EthiopianDamaRulesTest.class;
-        for (Method method : testClass.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(Test.class)) {
-                try {
-                    Object instance = testClass.getDeclaredConstructor().newInstance();
+        Class<?>[] testClasses = {
+                EthiopianDamaRulesTest.class,
+                DrawDetectorTest.class
+        };
 
-                    // Run @BeforeEach
-                    for (Method bm : testClass.getDeclaredMethods()) {
-                        if (bm.isAnnotationPresent(BeforeEach.class)) {
-                            bm.invoke(instance);
+        for (Class<?> testClass : testClasses) {
+            System.out.println("==> Running " + testClass.getSimpleName() + ":");
+            for (Method method : testClass.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(Test.class)) {
+                    try {
+                        Object instance = testClass.getDeclaredConstructor().newInstance();
+
+                        // Run @BeforeEach
+                        for (Method bm : testClass.getDeclaredMethods()) {
+                            if (bm.isAnnotationPresent(BeforeEach.class)) {
+                                bm.invoke(instance);
+                            }
                         }
-                    }
 
-                    method.invoke(instance);
-                    System.out.println("  ✓ [PASS] " + method.getName());
-                    passed++;
-                } catch (Exception ex) {
-                    System.err.println("  ✗ [FAIL] " + method.getName() + " -> " + ex.getCause());
-                    ex.printStackTrace();
-                    failed++;
+                        method.invoke(instance);
+                        System.out.println("  ✓ [PASS] " + method.getName());
+                        passed++;
+                    } catch (Exception ex) {
+                        System.err.println("  ✗ [FAIL] " + method.getName() + " -> " + ex.getCause());
+                        ex.printStackTrace();
+                        failed++;
+                    }
                 }
             }
+            System.out.println();
         }
 
         System.out.printf("%nTests summary: %d passed, %d failed.%n", passed, failed);

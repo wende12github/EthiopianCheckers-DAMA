@@ -23,6 +23,7 @@ public class GameSession {
     private final Player player2;
     private final List<GameEventListener> listeners = new CopyOnWriteArrayList<>();
     private final Stack<GameState> undoStack = new Stack<>();
+    private final DrawDetector drawDetector = new DrawDetector();
 
     private GameState currentState;
     private boolean isRunning = false;
@@ -54,6 +55,7 @@ public class GameSession {
     public void start() {
         this.currentState = new GameState();
         this.undoStack.clear();
+        this.drawDetector.reset();
         this.isRunning = true;
 
         for (GameEventListener l : listeners) {
@@ -119,6 +121,8 @@ public class GameSession {
         // Save for undo
         undoStack.push(currentState.copy());
 
+        Piece pieceMoved = currentState.getBoard().getPiece(move.getFrom());
+
         // Apply move
         rules.applyMove(currentState.getBoard(), move, currentState.getCurrentTurn());
         currentState.recordMove(move);
@@ -127,8 +131,19 @@ public class GameSession {
             l.onMoveExecuted(move, current);
         }
 
-        // Check if game over for opponent
+        // Check if move results in a Draw (insufficient material, 3-fold repetition, 50-ply rule)
         PieceColor nextTurn = currentState.getCurrentTurn().opponent();
+        String drawReason = drawDetector.checkDraw(currentState.getBoard(), nextTurn, move, pieceMoved);
+        if (drawReason != null) {
+            currentState.setDraw(drawReason);
+            isRunning = false;
+            for (GameEventListener l : listeners) {
+                l.onGameOver(null, currentState.getGameOverReason());
+            }
+            return true;
+        }
+
+        // Check if game over for opponent (loss)
         if (rules.isGameOver(currentState.getBoard(), nextTurn)) {
             currentState.setGameOver(currentState.getCurrentTurn(),
                     current.getName() + " wins! Opponent has no remaining legal moves.");
@@ -143,6 +158,44 @@ public class GameSession {
         currentState.switchTurn();
         notifyTurn();
         return true;
+    }
+
+    /**
+     * Declares a draw manually or by mutual agreement.
+     */
+    public synchronized void declareDraw(String reason) {
+        if (!isRunning) return;
+        currentState.setDraw(reason);
+        isRunning = false;
+        for (GameEventListener l : listeners) {
+            l.onGameOver(null, currentState.getGameOverReason());
+        }
+    }
+
+    /**
+     * Offers a draw.
+     * In AI mode: AI decides based on board position evaluation.
+     * Returns true if the draw was accepted and enacted.
+     */
+    public synchronized boolean offerDraw(Player offeringPlayer) {
+        if (!isRunning) return false;
+
+        if (gameMode == GameMode.HUMAN_VS_AI) {
+            Player ai = (player1.isAI()) ? player1 : player2;
+            boolean accepted = drawDetector.shouldAIAcceptDraw(currentState.getBoard(), ai.getColor());
+            if (accepted) {
+                declareDraw("Agreed to draw offer with " + ai.getName() + ".");
+                return true;
+            }
+            return false;
+        }
+
+        // For human vs human, caller prompts the other player
+        return false;
+    }
+
+    public DrawDetector getDrawDetector() {
+        return drawDetector;
     }
 
     /**

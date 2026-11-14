@@ -18,6 +18,11 @@ An authentic, modernized implementation of traditional Ethiopian Checkers (Dama)
 * **Theme & Color Customization**:
   * 5 built-in themes: *Classic Wood*, *Ethiopian Heritage*, *Modern Tournament*, *Midnight Dark*, and *Forest Emerald*.
   * Custom palette dialog allowing players to customize board light/dark squares and player 1/2 piece colors live during gameplay.
+* **Intelligent Draw (Tie) Engine**:
+  * **Automatic Insufficient Material**: Detects mathematically unwinnable endgames (e.g. 1 King vs 1 King) and concludes match immediately as a draw.
+  * **Threefold Repetition**: Full board state fingerprinting prevents infinite cycle loops and declares a draw when the identical position occurs 3 times.
+  * **50-Ply No-Progress Rule**: Declares a draw if 25 consecutive turns (50 plies) elapse without any captures or regular piece advances.
+  * **Interactive Draw Offers**: Both players in Human vs Human can propose mutual draws; against Computer AI, the AI evaluates positional advantage via `BoardEvaluator`—accepting when balanced or losing, and declining when in a winning position.
 * **Non-Blocking Visual Feedback**: In the GUI, pieces with mandatory captures feature a subtle amber pulse (no disruptive modal popups).
 * **Game Over Experience**: Post-match floating card with **New Game** and **Review Board** mode.
 
