@@ -3,7 +3,7 @@ package com.dama.ethiopiancheckersgame.player.ai;
 import com.dama.ethiopiancheckersgame.core.model.Board;
 import com.dama.ethiopiancheckersgame.core.model.Move;
 import com.dama.ethiopiancheckersgame.core.model.PieceColor;
-import com.dama.ethiopiancheckersgame.core.rules.EthiopianDamaRules;
+import com.dama.ethiopiancheckersgame.core.rules.DamaRuleStrategy;
 
 import java.util.Collections;
 import java.util.List;
@@ -13,11 +13,11 @@ import java.util.Random;
  * Minimax decision engine with Alpha-Beta pruning for Ethiopian Checkers.
  */
 public class MinimaxEngine {
-    private final EthiopianDamaRules rules;
+    private final DamaRuleStrategy rules;
     private final BoardEvaluator evaluator;
     private final Random random;
 
-    public MinimaxEngine(EthiopianDamaRules rules) {
+    public MinimaxEngine(DamaRuleStrategy rules) {
         this.rules = rules;
         this.evaluator = new BoardEvaluator();
         this.random = new Random();

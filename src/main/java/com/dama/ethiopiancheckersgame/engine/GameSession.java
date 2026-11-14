@@ -1,7 +1,10 @@
 package com.dama.ethiopiancheckersgame.engine;
 
 import com.dama.ethiopiancheckersgame.core.model.*;
-import com.dama.ethiopiancheckersgame.core.rules.EthiopianDamaRules;
+import com.dama.ethiopiancheckersgame.core.rules.DamaRuleStrategy;
+import com.dama.ethiopiancheckersgame.core.rules.DamaVariant;
+import com.dama.ethiopiancheckersgame.core.rules.EgregnaRules;
+import com.dama.ethiopiancheckersgame.core.rules.TankegnaRules;
 import com.dama.ethiopiancheckersgame.player.Player;
 
 import java.util.ArrayList;
@@ -14,7 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * enforcing Ethiopian Dama rules, maintaining undo history, and notifying event listeners.
  */
 public class GameSession {
-    private final EthiopianDamaRules rules;
+    private final DamaRuleStrategy rules;
     private final GameMode gameMode;
     private final Player player1;
     private final Player player2;
@@ -25,7 +28,15 @@ public class GameSession {
     private boolean isRunning = false;
 
     public GameSession(Player player1, Player player2, GameMode gameMode) {
-        this.rules = new EthiopianDamaRules();
+        this(player1, player2, gameMode, new TankegnaRules());
+    }
+
+    public GameSession(Player player1, Player player2, GameMode gameMode, DamaVariant variant) {
+        this(player1, player2, gameMode, variant == DamaVariant.EGREGNA ? new EgregnaRules() : new TankegnaRules());
+    }
+
+    public GameSession(Player player1, Player player2, GameMode gameMode, DamaRuleStrategy rules) {
+        this.rules = rules != null ? rules : new TankegnaRules();
         this.player1 = player1;
         this.player2 = player2;
         this.gameMode = gameMode;
@@ -68,8 +79,12 @@ public class GameSession {
         return currentState;
     }
 
-    public EthiopianDamaRules getRules() {
+    public DamaRuleStrategy getRules() {
         return rules;
+    }
+
+    public DamaVariant getVariant() {
+        return rules.getVariant();
     }
 
     public GameMode getGameMode() {

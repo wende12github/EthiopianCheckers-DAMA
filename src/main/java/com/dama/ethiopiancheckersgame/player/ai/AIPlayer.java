@@ -3,7 +3,7 @@ package com.dama.ethiopiancheckersgame.player.ai;
 import com.dama.ethiopiancheckersgame.core.model.GameState;
 import com.dama.ethiopiancheckersgame.core.model.Move;
 import com.dama.ethiopiancheckersgame.core.model.PieceColor;
-import com.dama.ethiopiancheckersgame.core.rules.EthiopianDamaRules;
+import com.dama.ethiopiancheckersgame.core.rules.DamaRuleStrategy;
 import com.dama.ethiopiancheckersgame.player.Player;
 
 import java.util.concurrent.CompletableFuture;
@@ -17,7 +17,7 @@ public class AIPlayer implements Player {
     private final AIDifficulty difficulty;
     private final MinimaxEngine minimaxEngine;
 
-    public AIPlayer(String name, PieceColor color, AIDifficulty difficulty, EthiopianDamaRules rules) {
+    public AIPlayer(String name, PieceColor color, AIDifficulty difficulty, DamaRuleStrategy rules) {
         this.name = name;
         this.color = color;
         this.difficulty = difficulty;

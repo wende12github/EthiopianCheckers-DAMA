@@ -1,7 +1,10 @@
 package com.dama.ethiopiancheckersgame.ui.cli;
 
 import com.dama.ethiopiancheckersgame.core.model.*;
-import com.dama.ethiopiancheckersgame.core.rules.EthiopianDamaRules;
+import com.dama.ethiopiancheckersgame.core.rules.DamaRuleStrategy;
+import com.dama.ethiopiancheckersgame.core.rules.DamaVariant;
+import com.dama.ethiopiancheckersgame.core.rules.EgregnaRules;
+import com.dama.ethiopiancheckersgame.core.rules.TankegnaRules;
 import com.dama.ethiopiancheckersgame.engine.GameMode;
 import com.dama.ethiopiancheckersgame.engine.GameSession;
 import com.dama.ethiopiancheckersgame.player.HumanPlayer;
@@ -22,7 +25,19 @@ public class TerminalGame {
         System.out.println("========================================");
         System.out.println("   ETHIOPIAN CHECKERS (DAMA / ዳማ) v2.0  ");
         System.out.println("========================================");
-        System.out.println("Select Game Mode:");
+        System.out.println("Select Rules Variant:");
+        System.out.println("1) Tankegna (ታንከኛ - Flying King & 4-Way Capture)");
+        System.out.println("2) Egregna (እግረኛ - Foot Soldier: Forward Capture & 1-Step King)");
+        System.out.print("Variant (1-2): ");
+
+        int vChoice = 1;
+        try {
+            vChoice = Integer.parseInt(scanner.nextLine().trim());
+        } catch (Exception ignored) {
+        }
+        DamaRuleStrategy rules = (vChoice == 2) ? new EgregnaRules() : new TankegnaRules();
+
+        System.out.println("\nSelect Game Mode:");
         System.out.println("1) Player vs Computer (AI)");
         System.out.println("2) Human vs Human (Local)");
         System.out.print("Choice (1-2): ");
@@ -35,7 +50,6 @@ public class TerminalGame {
 
         Player p1 = new HumanPlayer("Player 1", PieceColor.RED);
         Player p2;
-        EthiopianDamaRules rules = new EthiopianDamaRules();
 
         if (choice == 2) {
             p2 = new HumanPlayer("Player 2", PieceColor.BLACK);
@@ -55,7 +69,7 @@ public class TerminalGame {
             p2 = new AIPlayer("Computer", PieceColor.BLACK, diff, rules);
         }
 
-        GameSession session = new GameSession(p1, p2, choice == 2 ? GameMode.HUMAN_VS_HUMAN : GameMode.HUMAN_VS_AI);
+        GameSession session = new GameSession(p1, p2, choice == 2 ? GameMode.HUMAN_VS_HUMAN : GameMode.HUMAN_VS_AI, rules);
 
         while (!session.getCurrentState().isGameOver()) {
             printBoard(session.getCurrentState().getBoard());

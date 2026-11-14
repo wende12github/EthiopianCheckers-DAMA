@@ -39,6 +39,9 @@ public class BoardCanvas extends Canvas {
 
         setOnMouseClicked(e -> handleMouseClick(e.getX(), e.getY()));
 
+        // Listen for dynamic theme changes
+        Theme.addThemeListener(t -> render());
+
         // Continuous subtle animation timer for mandatory capture glow
         AnimationTimer timer = new AnimationTimer() {
             @Override
@@ -112,6 +115,7 @@ public class BoardCanvas extends Canvas {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, BOARD_PX, BOARD_PX);
 
+        Theme theme = Theme.getCurrent();
         Board board = session.getCurrentState().getBoard();
         PieceColor turn = session.getCurrentState().getCurrentTurn();
         List<Position> mandatoryPieces = session.getRules().getMandatoryCapturePieces(board, turn);
@@ -123,17 +127,17 @@ public class BoardCanvas extends Canvas {
                 double y = r * TILE_SIZE;
                 boolean isDark = (r + c) % 2 != 0;
 
-                gc.setFill(isDark ? Theme.TILE_DARK : Theme.TILE_LIGHT);
+                gc.setFill(isDark ? theme.getTileDark() : theme.getTileLight());
                 gc.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
                 // Coordinate hints on board border
                 if (c == 0) {
-                    gc.setFill(isDark ? Theme.TILE_LIGHT : Theme.TILE_DARK);
+                    gc.setFill(isDark ? theme.getTileLight() : theme.getTileDark());
                     gc.setFont(Font.font("Segoe UI", 11));
                     gc.fillText(String.valueOf(8 - r), x + 4, y + 14);
                 }
                 if (r == 7) {
-                    gc.setFill(isDark ? Theme.TILE_LIGHT : Theme.TILE_DARK);
+                    gc.setFill(isDark ? theme.getTileLight() : theme.getTileDark());
                     gc.setFont(Font.font("Segoe UI", 11));
                     gc.fillText(String.valueOf((char) ('A' + c)), x + TILE_SIZE - 12, y + TILE_SIZE - 4);
                 }
@@ -143,9 +147,9 @@ public class BoardCanvas extends Canvas {
         // 2. Draw mandatory capture glow
         double alpha = 0.35 + 0.35 * Math.sin(pulsePhase);
         Color pulseColor = Color.color(
-                Theme.MANDATORY_CAPTURE_PULSE.getRed(),
-                Theme.MANDATORY_CAPTURE_PULSE.getGreen(),
-                Theme.MANDATORY_CAPTURE_PULSE.getBlue(),
+                theme.getMandatoryCapturePulse().getRed(),
+                theme.getMandatoryCapturePulse().getGreen(),
+                theme.getMandatoryCapturePulse().getBlue(),
                 alpha
         );
 
@@ -161,7 +165,7 @@ public class BoardCanvas extends Canvas {
         if (selectedPosition != null) {
             double x = selectedPosition.col() * TILE_SIZE;
             double y = selectedPosition.row() * TILE_SIZE;
-            gc.setStroke(Theme.SELECTED_GLOW);
+            gc.setStroke(theme.getSelectedGlow());
             gc.setLineWidth(4.5);
             gc.strokeRoundRect(x + 3, y + 3, TILE_SIZE - 6, TILE_SIZE - 6, 12, 12);
         }
@@ -174,12 +178,12 @@ public class BoardCanvas extends Canvas {
 
             if (move.isCapture()) {
                 // Red ring for capture
-                gc.setStroke(Theme.VALID_CAPTURE_RING);
+                gc.setStroke(theme.getValidCaptureRing());
                 gc.setLineWidth(4.0);
                 gc.strokeOval(cx - 16, cy - 16, 32, 32);
             } else {
                 // Green dot for simple slide
-                gc.setFill(Theme.VALID_MOVE_DOT);
+                gc.setFill(theme.getValidMoveDot());
                 gc.fillOval(cx - 10, cy - 10, 20, 20);
             }
         }
@@ -200,9 +204,10 @@ public class BoardCanvas extends Canvas {
         double cx = x + TILE_SIZE / 2;
         double cy = y + TILE_SIZE / 2;
 
+        Theme theme = Theme.getCurrent();
         boolean isRed = piece.color() == PieceColor.RED;
-        Color fill = isRed ? Theme.PIECE_RED_FILL : Theme.PIECE_BLACK_FILL;
-        Color border = isRed ? Theme.PIECE_RED_BORDER : Theme.PIECE_BLACK_BORDER;
+        Color fill = isRed ? theme.getPieceRedFill() : theme.getPieceBlackFill();
+        Color border = isRed ? theme.getPieceRedBorder() : theme.getPieceBlackBorder();
 
         // Shadow
         gc.setFill(Color.rgb(0, 0, 0, 0.28));

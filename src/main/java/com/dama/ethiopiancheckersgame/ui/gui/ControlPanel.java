@@ -16,26 +16,30 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 /**
  * Isolated status and control sidebar panel.
- * Displays player scores, active turn, piece counts, and control buttons.
+ * Displays player scores, active variant badge, active turn, piece counts, and control buttons.
  */
 public class ControlPanel extends VBox {
     private final GameSession session;
     private final Runnable onUndoRequested;
     private final Runnable onRestartRequested;
     private final Runnable onMenuRequested;
+    private final Runnable onReviewRequested;
 
     private final Label turnBanner;
+    private final Label variantBadge;
     private final Label p1ScoreLabel;
     private final Label p2ScoreLabel;
     private final Label p1KingLabel;
     private final Label p2KingLabel;
+    private final Circle p1ColorIndicator;
+    private final Circle p2ColorIndicator;
     private final VBox p1Card;
     private final VBox p2Card;
     private final VBox gameOverBox;
-    private final Runnable onReviewRequested;
     private boolean isReviewMode = false;
 
     public ControlPanel(GameSession session, Runnable onUndoRequested, Runnable onRestartRequested, Runnable onMenuRequested, Runnable onReviewRequested) {
@@ -46,8 +50,8 @@ public class ControlPanel extends VBox {
         this.onReviewRequested = onReviewRequested;
 
         setPrefWidth(260);
-        setPadding(new Insets(20));
-        setSpacing(14);
+        setPadding(new Insets(18));
+        setSpacing(12);
         setStyle("-fx-background-color: #2D2D2D; -fx-background-radius: 8px;");
 
         // Game Title
@@ -59,6 +63,13 @@ public class ControlPanel extends VBox {
         amharicSubtitle.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 13));
         amharicSubtitle.setTextFill(Color.web("#B0BEC5"));
 
+        // Rules Variant Badge (Egregna vs Tankegna)
+        variantBadge = new Label("Rules: " + session.getVariant().getDisplayName());
+        variantBadge.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
+        variantBadge.setTextFill(Color.web("#FFD54F"));
+        variantBadge.setPadding(new Insets(4, 8, 4, 8));
+        variantBadge.setStyle("-fx-background-color: #37474F; -fx-background-radius: 4px;");
+
         // Turn Banner
         turnBanner = new Label("Turn: Player 1");
         turnBanner.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
@@ -68,23 +79,35 @@ public class ControlPanel extends VBox {
         turnBanner.setAlignment(Pos.CENTER);
         turnBanner.setStyle("-fx-background-color: #43A047; -fx-background-radius: 6px;");
 
-        // Player 1 Card (Red)
-        p1Card = createPlayerCard(session.getPlayer1().getName(), PieceColor.RED);
+        // Player 1 Card
+        p1ColorIndicator = new Circle(7, Theme.getCurrent().getPieceRedFill());
+        p1ColorIndicator.setStroke(Color.WHITE);
+        p1ColorIndicator.setStrokeWidth(1.2);
+        p1Card = createPlayerCard(session.getPlayer1().getName(), p1ColorIndicator);
         p1ScoreLabel = new Label("Pieces: 12");
         p1ScoreLabel.setTextFill(Color.web("#ECEFF1"));
         p1KingLabel = new Label("Kings: 0");
         p1KingLabel.setTextFill(Color.web("#FFD54F"));
         p1Card.getChildren().addAll(p1ScoreLabel, p1KingLabel);
 
-        // Player 2 Card (Black / AI)
-        p2Card = createPlayerCard(session.getPlayer2().getName(), PieceColor.BLACK);
+        // Player 2 Card
+        p2ColorIndicator = new Circle(7, Theme.getCurrent().getPieceBlackFill());
+        p2ColorIndicator.setStroke(Color.WHITE);
+        p2ColorIndicator.setStrokeWidth(1.2);
+        p2Card = createPlayerCard(session.getPlayer2().getName(), p2ColorIndicator);
         p2ScoreLabel = new Label("Pieces: 12");
         p2ScoreLabel.setTextFill(Color.web("#ECEFF1"));
         p2KingLabel = new Label("Kings: 0");
         p2KingLabel.setTextFill(Color.web("#FFD54F"));
         p2Card.getChildren().addAll(p2ScoreLabel, p2KingLabel);
 
-        // Game Over Actions Box (Appears when match ends)
+        // Listen for Theme Updates
+        Theme.addThemeListener(t -> {
+            p1ColorIndicator.setFill(t.getPieceRedFill());
+            p2ColorIndicator.setFill(t.getPieceBlackFill());
+        });
+
+        // Game Over Actions Box
         gameOverBox = new VBox(8);
         gameOverBox.setPadding(new Insets(10));
         gameOverBox.setStyle("-fx-background-color: #212121; -fx-background-radius: 6px; -fx-border-color: #FFB300; -fx-border-width: 1.5px; -fx-border-radius: 6px;");
@@ -109,6 +132,9 @@ public class ControlPanel extends VBox {
         Button undoBtn = createStyledButton("⤺ Undo Move", "#546E7A");
         undoBtn.setOnAction(e -> onUndoRequested.run());
 
+        Button themeBtn = createStyledButton("🎨 Theme / Colors", "#00838F");
+        themeBtn.setOnAction(e -> ThemeCustomizerDialog.show((Stage) getScene().getWindow()));
+
         Button restartBtn = createStyledButton("↻ Restart Game", "#455A64");
         restartBtn.setOnAction(e -> onRestartRequested.run());
 
@@ -120,27 +146,24 @@ public class ControlPanel extends VBox {
 
         getChildren().addAll(
                 titleLabel, amharicSubtitle,
+                variantBadge,
                 turnBanner,
                 gameOverBox,
                 p1Card, p2Card,
                 spacer,
-                undoBtn, restartBtn, menuBtn
+                undoBtn, themeBtn, restartBtn, menuBtn
         );
 
         updateState();
     }
 
-    private VBox createPlayerCard(String name, PieceColor color) {
+    private VBox createPlayerCard(String name, Circle colorIndicator) {
         VBox card = new VBox(6);
         card.setPadding(new Insets(10));
         card.setStyle("-fx-background-color: #383838; -fx-background-radius: 6px;");
 
         HBox header = new HBox(8);
         header.setAlignment(Pos.CENTER_LEFT);
-
-        Circle colorIndicator = new Circle(7, color == PieceColor.RED ? Theme.PIECE_RED_FILL : Theme.PIECE_BLACK_FILL);
-        colorIndicator.setStroke(Color.WHITE);
-        colorIndicator.setStrokeWidth(1.2);
 
         Label nameLabel = new Label(name);
         nameLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
@@ -156,7 +179,7 @@ public class ControlPanel extends VBox {
         btn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         btn.setTextFill(Color.WHITE);
         btn.setMaxWidth(Double.MAX_VALUE);
-        btn.setPadding(new Insets(9, 12, 9, 12));
+        btn.setPadding(new Insets(8, 12, 8, 12));
         btn.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 5px; -fx-cursor: hand;");
         return btn;
     }

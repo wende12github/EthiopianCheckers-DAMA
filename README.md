@@ -5,13 +5,21 @@ An authentic, modernized implementation of traditional Ethiopian Checkers (Dama)
 ---
 
 ## What's New in v2.0
+* **Selectable Rule Modes (Strategy Pattern)**:
+  * **Egregna (እግረኛ - Foot Soldier Mode)**:
+    * Regular piece moves and captures **forward only**.
+    * King piece (**Short King**) moves and captures **1 square** in all 4 diagonal directions (cannot slide over distance).
+  * **Tankegna (ታንከኛ - Armored Tank Mode)**:
+    * Regular piece moves forward, captures in **all 4 diagonal directions** (both forward and backward with direction changes during multi-jump).
+    * King piece (**Flying King / Dama**) slides any number of squares and captures over distance, landing on any open square behind.
+    * Configurable `promoteMidJump` flag (standard `false`: continues regular jump, promotes at turn end).
+    * Pending removal tracking prevents pieces from being jumped twice within the same multi-jump sequence.
 * **Computer / AI Opponent**: Play against an AI with 3 difficulty modes: **Easy**, **Medium (Tactical Minimax)**, and **Hard (Alpha-Beta Pruning with Board Control Heuristics)**.
-* **Authentic Ethiopian Dama Rules**:
-  * **Flying King (Dama / ንጉሥ)**: Kings slide any distance diagonally and capture over distance, landing on any open square behind captured pieces.
-  * **Mandatory Captures & Maximum Capture Rule**: Players must choose move sequences that capture the maximum number of pieces.
-  * **Chained Multi-Jumps**: Full multi-capture jump trees are supported.
-* **Decoupled Component Architecture**: Clean separation between domain rules (`core`), AI engines (`player.ai`), game controllers (`engine`), and user interfaces (`ui.gui`, `ui.cli`).
+* **Theme & Color Customization**:
+  * 5 built-in themes: *Classic Wood*, *Ethiopian Heritage*, *Modern Tournament*, *Midnight Dark*, and *Forest Emerald*.
+  * Custom palette dialog allowing players to customize board light/dark squares and player 1/2 piece colors live during gameplay.
 * **Non-Blocking Visual Feedback**: In the GUI, pieces with mandatory captures feature a subtle amber pulse (no disruptive modal popups).
+* **Game Over Experience**: Post-match floating card with **New Game** and **Review Board** mode.
 
 ---
 
