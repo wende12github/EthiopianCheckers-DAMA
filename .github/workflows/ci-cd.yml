@@ -1,0 +1,75 @@
+name: Build, Test & Deploy Cloud Server
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-build:
+    name: Verify Tests & Compile (Java 21 LTS)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up OpenJDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Grant Execute Permissions to Maven Wrapper
+        run: chmod +x mvnw
+
+      - name: Compile & Run Full Test Suite (23 Tests)
+        run: |
+          ./mvnw clean test-compile
+          # Run the comprehensive test suite
+          CP=$(find ~/.m2/repository/org/junit ~/.m2/repository/org/opentest4j ~/.m2/repository/org/apiguardian ~/.m2/repository/org/openjfx -name "*.jar" | paste -sd: -):target/classes:target/test-classes
+          java -cp "$CP" com.dama.ethiopiancheckersgame.TestRunner
+
+      - name: Package Application JAR
+        run: ./mvnw package -DskipTests=true
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ethiopian-checkers-jar
+          path: target/*.jar
+
+  docker-verify:
+    name: Build Docker Container
+    needs: test-and-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: ethiopian-checkers-server:latest
+
+  deploy-render:
+    name: Trigger Render.com Cloud Deploy
+    needs: [test-and-build, docker-verify]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Render (Optional Webhook)
+        if: env.RENDER_DEPLOY_HOOK_URL != ''
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          curl -X POST "$RENDER_DEPLOY_HOOK_URL"

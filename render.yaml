@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ethiopian-checkers-server
+    env: docker
+    plan: free
+    region: frankfurt # or oregon / singapore
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8989
