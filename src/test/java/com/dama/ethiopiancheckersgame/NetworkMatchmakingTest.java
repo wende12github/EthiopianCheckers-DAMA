@@ -17,12 +17,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NetworkMatchmakingTest {
     private MatchmakingServer server;
-    private final int testPort = 9876;
+    private int testPort;
 
     @BeforeEach
     public void setUp() throws IOException {
-        server = new MatchmakingServer(testPort);
+        server = new MatchmakingServer(0);
         server.start();
+        testPort = server.getPort();
     }
 
     @AfterEach
