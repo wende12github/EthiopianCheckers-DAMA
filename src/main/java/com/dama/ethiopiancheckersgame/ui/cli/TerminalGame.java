@@ -95,6 +95,29 @@ public class TerminalGame {
         System.out.println("\n****************************************");
         System.out.println("GAME OVER! " + session.getCurrentState().getGameOverReason());
         System.out.println("****************************************");
+
+        // Game Over Options: Review Board or New Game
+        while (true) {
+            System.out.println("\nOptions:");
+            System.out.println("1) Review Final Board State");
+            System.out.println("2) Start New Game");
+            System.out.println("3) Exit");
+            System.out.print("Choice (1-3): ");
+            String postChoice = scanner.nextLine().trim();
+
+            if ("1".equals(postChoice)) {
+                System.out.println("\n--- [REVIEW MODE: FINAL BOARD] ---");
+                printBoard(session.getCurrentState().getBoard());
+                System.out.println("Winner: " + session.getCurrentState().getWinner());
+                System.out.println("Total moves played: " + session.getCurrentState().getMoveHistory().size());
+            } else if ("2".equals(postChoice)) {
+                run();
+                return;
+            } else {
+                System.out.println("Thank you for playing Ethiopian Checkers!");
+                break;
+            }
+        }
     }
 
     private static void printBoard(Board board) {

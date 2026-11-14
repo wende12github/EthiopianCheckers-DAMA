@@ -6,6 +6,9 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
@@ -27,6 +30,7 @@ public class BoardCanvas extends Canvas {
     private Position selectedPosition = null;
     private List<Move> activePieceMoves = Collections.emptyList();
     private double pulsePhase = 0.0;
+    private boolean isReviewMode = false;
 
     public BoardCanvas(GameSession session, Consumer<Move> onMoveRequested) {
         super(BOARD_PX, BOARD_PX);
@@ -46,8 +50,19 @@ public class BoardCanvas extends Canvas {
         timer.start();
     }
 
+    public void setReviewMode(boolean reviewMode) {
+        this.isReviewMode = reviewMode;
+        this.selectedPosition = null;
+        this.activePieceMoves = Collections.emptyList();
+        render();
+    }
+
+    public boolean isReviewMode() {
+        return isReviewMode;
+    }
+
     private void handleMouseClick(double x, double y) {
-        if (!session.isRunning() || session.getCurrentPlayer().isAI()) {
+        if (!session.isRunning() || session.getCurrentPlayer().isAI() || isReviewMode) {
             return;
         }
 
@@ -209,10 +224,93 @@ public class BoardCanvas extends Canvas {
 
         // King Crown (Dama / ንጉሥ)
         if (piece.isKing()) {
-            gc.setFill(Color.web("#FFD700"));
-            gc.setFont(Font.font("Segoe UI Emoji, Arial", radius * 1.15));
-            gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText("\uD83D\uDC51", cx, cy + radius * 0.38);
+            drawKingCrown(gc, cx, cy, radius);
         }
+    }
+
+    /**
+     * Renders a crisp, high-definition royal golden crown on King pieces (Dama).
+     * Vector drawn with peaks, pearls, golden gradient, and embedded gems.
+     */
+    private void drawKingCrown(GraphicsContext gc, double cx, double cy, double radius) {
+        double w = radius * 0.62;
+        double h = radius * 0.52;
+        double baseY = cy + h * 0.45;
+
+        // Subtle ambient gold halo behind crown
+        gc.setFill(Color.rgb(255, 215, 0, 0.35));
+        gc.fillOval(cx - w * 1.15, cy - h * 1.05, w * 2.3, h * 1.8);
+
+        // 7-point royal crown silhouette
+        double[] xPoints = {
+                cx - w,          // 0: Bottom-left
+                cx - w * 1.05,   // 1: Left outer peak
+                cx - w * 0.45,   // 2: Left inner valley
+                cx,              // 3: Center peak (highest)
+                cx + w * 0.45,   // 4: Right inner valley
+                cx + w * 1.05,   // 5: Right outer peak
+                cx + w           // 6: Bottom-right
+        };
+        double[] yPoints = {
+                baseY,           // 0
+                cy - h * 0.52,   // 1
+                cy - h * 0.05,   // 2
+                cy - h * 1.05,   // 3
+                cy - h * 0.05,   // 4
+                cy - h * 0.52,   // 5
+                baseY            // 6
+        };
+
+        // Golden linear gradient for royal luster
+        LinearGradient goldGrad = new LinearGradient(
+                0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0.0, Color.web("#FFF59D")),
+                new Stop(0.35, Color.web("#FFD54F")),
+                new Stop(1.0, Color.web("#FF8F00"))
+        );
+
+        // 1. Crown base band
+        gc.setFill(Color.web("#FFA000"));
+        gc.fillRoundRect(cx - w * 0.95, baseY - 3, w * 1.9, 6.5, 3, 3);
+        gc.setStroke(Color.web("#5D4037"));
+        gc.setLineWidth(1.2);
+        gc.strokeRoundRect(cx - w * 0.95, baseY - 3, w * 1.9, 6.5, 3, 3);
+
+        // 2. Main crown body
+        gc.setFill(goldGrad);
+        gc.fillPolygon(xPoints, yPoints, 7);
+        gc.setStroke(Color.web("#4E342E"));
+        gc.setLineWidth(1.8);
+        gc.strokePolygon(xPoints, yPoints, 7);
+
+        // 3. Golden pearls on the 3 peaks
+        gc.setFill(Color.web("#FFFDE7"));
+        gc.setStroke(Color.web("#FF8F00"));
+        gc.setLineWidth(1.0);
+
+        // Left peak pearl
+        gc.fillOval(xPoints[1] - 2.8, yPoints[1] - 3.8, 5.6, 5.6);
+        gc.strokeOval(xPoints[1] - 2.8, yPoints[1] - 3.8, 5.6, 5.6);
+
+        // Center peak pearl (larger)
+        gc.fillOval(xPoints[3] - 3.6, yPoints[3] - 5.0, 7.2, 7.2);
+        gc.strokeOval(xPoints[3] - 3.6, yPoints[3] - 5.0, 7.2, 7.2);
+
+        // Right peak pearl
+        gc.fillOval(xPoints[5] - 2.8, yPoints[5] - 3.8, 5.6, 5.6);
+        gc.strokeOval(xPoints[5] - 2.8, yPoints[5] - 3.8, 5.6, 5.6);
+
+        // 4. Embedded jewels on the base band
+        // Center Ruby
+        gc.setFill(Color.web("#E53935"));
+        gc.fillOval(cx - 2.5, baseY - 2.2, 5.0, 5.0);
+
+        // Left Sapphire
+        gc.setFill(Color.web("#1E88E5"));
+        gc.fillOval(cx - w * 0.55 - 2.0, baseY - 2.0, 4.2, 4.2);
+
+        // Right Emerald
+        gc.setFill(Color.web("#43A047"));
+        gc.fillOval(cx + w * 0.55 - 2.2, baseY - 2.0, 4.2, 4.2);
     }
 }

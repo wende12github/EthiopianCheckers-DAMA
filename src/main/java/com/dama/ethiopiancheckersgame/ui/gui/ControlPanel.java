@@ -34,16 +34,20 @@ public class ControlPanel extends VBox {
     private final Label p2KingLabel;
     private final VBox p1Card;
     private final VBox p2Card;
+    private final VBox gameOverBox;
+    private final Runnable onReviewRequested;
+    private boolean isReviewMode = false;
 
-    public ControlPanel(GameSession session, Runnable onUndoRequested, Runnable onRestartRequested, Runnable onMenuRequested) {
+    public ControlPanel(GameSession session, Runnable onUndoRequested, Runnable onRestartRequested, Runnable onMenuRequested, Runnable onReviewRequested) {
         this.session = session;
         this.onUndoRequested = onUndoRequested;
         this.onRestartRequested = onRestartRequested;
         this.onMenuRequested = onMenuRequested;
+        this.onReviewRequested = onReviewRequested;
 
         setPrefWidth(260);
         setPadding(new Insets(20));
-        setSpacing(16);
+        setSpacing(14);
         setStyle("-fx-background-color: #2D2D2D; -fx-background-radius: 8px;");
 
         // Game Title
@@ -80,7 +84,28 @@ public class ControlPanel extends VBox {
         p2KingLabel.setTextFill(Color.web("#FFD54F"));
         p2Card.getChildren().addAll(p2ScoreLabel, p2KingLabel);
 
-        // Buttons
+        // Game Over Actions Box (Appears when match ends)
+        gameOverBox = new VBox(8);
+        gameOverBox.setPadding(new Insets(10));
+        gameOverBox.setStyle("-fx-background-color: #212121; -fx-background-radius: 6px; -fx-border-color: #FFB300; -fx-border-width: 1.5px; -fx-border-radius: 6px;");
+        gameOverBox.setVisible(false);
+        gameOverBox.setManaged(false);
+
+        Label gameOverTitle = new Label("Match Concluded");
+        gameOverTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        gameOverTitle.setTextFill(Color.web("#FFD54F"));
+        gameOverTitle.setAlignment(Pos.CENTER);
+        gameOverTitle.setMaxWidth(Double.MAX_VALUE);
+
+        Button newGameBtn = createStyledButton("▶ New Game", "#2E7D32");
+        newGameBtn.setOnAction(e -> onRestartRequested.run());
+
+        Button reviewBtn = createStyledButton("🔍 Review Board", "#0288D1");
+        reviewBtn.setOnAction(e -> onReviewRequested.run());
+
+        gameOverBox.getChildren().addAll(gameOverTitle, newGameBtn, reviewBtn);
+
+        // Standard Buttons
         Button undoBtn = createStyledButton("⤺ Undo Move", "#546E7A");
         undoBtn.setOnAction(e -> onUndoRequested.run());
 
@@ -96,6 +121,7 @@ public class ControlPanel extends VBox {
         getChildren().addAll(
                 titleLabel, amharicSubtitle,
                 turnBanner,
+                gameOverBox,
                 p1Card, p2Card,
                 spacer,
                 undoBtn, restartBtn, menuBtn
@@ -135,10 +161,16 @@ public class ControlPanel extends VBox {
         return btn;
     }
 
+    public void setReviewMode(boolean reviewMode) {
+        this.isReviewMode = reviewMode;
+        updateState();
+    }
+
     public void updateState() {
         Board board = session.getCurrentState().getBoard();
         Player current = session.getCurrentPlayer();
         PieceColor turn = session.getCurrentState().getCurrentTurn();
+        boolean isGameOver = session.getCurrentState().isGameOver();
 
         // Update counts
         p1ScoreLabel.setText("Pieces remaining: " + board.countPieces(PieceColor.RED));
@@ -147,10 +179,18 @@ public class ControlPanel extends VBox {
         p2ScoreLabel.setText("Pieces remaining: " + board.countPieces(PieceColor.BLACK));
         p2KingLabel.setText("Kings (Dama): " + board.countKings(PieceColor.BLACK));
 
-        // Active turn highlight
-        if (session.getCurrentState().isGameOver()) {
-            turnBanner.setText("Game Over!");
-            turnBanner.setStyle("-fx-background-color: #D32F2F; -fx-background-radius: 6px;");
+        // Game Over and Review Mode handling
+        gameOverBox.setVisible(isGameOver);
+        gameOverBox.setManaged(isGameOver);
+
+        if (isGameOver) {
+            if (isReviewMode) {
+                turnBanner.setText("🔍 Review Mode");
+                turnBanner.setStyle("-fx-background-color: #0288D1; -fx-background-radius: 6px;");
+            } else {
+                turnBanner.setText("Game Over!");
+                turnBanner.setStyle("-fx-background-color: #D32F2F; -fx-background-radius: 6px;");
+            }
         } else {
             if (current.isAI()) {
                 turnBanner.setText("AI Thinking...");
@@ -164,11 +204,11 @@ public class ControlPanel extends VBox {
         }
 
         // Active card highlight
-        p1Card.setStyle(turn == PieceColor.RED ?
+        p1Card.setStyle(turn == PieceColor.RED && !isGameOver ?
                 "-fx-background-color: #424242; -fx-border-color: #E53935; -fx-border-width: 2px; -fx-background-radius: 6px; -fx-border-radius: 6px;" :
                 "-fx-background-color: #383838; -fx-background-radius: 6px;");
 
-        p2Card.setStyle(turn == PieceColor.BLACK ?
+        p2Card.setStyle(turn == PieceColor.BLACK && !isGameOver ?
                 "-fx-background-color: #424242; -fx-border-color: #1E88E5; -fx-border-width: 2px; -fx-background-radius: 6px; -fx-border-radius: 6px;" :
                 "-fx-background-color: #383838; -fx-background-radius: 6px;");
     }
