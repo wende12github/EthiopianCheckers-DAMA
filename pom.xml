@@ -92,7 +92,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.dama.ethiopiancheckersgame/com.dama.ethiopiancheckersgame.EthiopianCheckersApp</mainClass>
+                            <mainClass>com.dama.ethiopiancheckersgame/com.dama.ethiopiancheckersgame.EthiopianCheckersGame</mainClass>
                             <launcher>app</launcher>
                             <noManPages>true</noManPages>
                             <stripDebug>true</stripDebug>
