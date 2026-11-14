@@ -18,6 +18,7 @@ import java.util.concurrent.*;
  */
 public class MatchmakingServer {
     private final int port;
+    private int boundPort;
     private ServerSocket serverSocket;
     private volatile boolean running = false;
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
@@ -33,6 +34,7 @@ public class MatchmakingServer {
 
     public MatchmakingServer(int port) {
         this.port = port;
+        this.boundPort = port;
         for (DamaVariant v : DamaVariant.values()) {
             publicQueues.put(v, new ConcurrentLinkedQueue<>());
         }
@@ -40,7 +42,10 @@ public class MatchmakingServer {
 
     public synchronized void start() throws IOException {
         if (running) return;
-        serverSocket = new ServerSocket(port);
+        serverSocket = new ServerSocket();
+        serverSocket.setReuseAddress(true);
+        serverSocket.bind(new InetSocketAddress(port));
+        boundPort = serverSocket.getLocalPort();
         running = true;
 
         threadPool.submit(() -> {
@@ -71,7 +76,7 @@ public class MatchmakingServer {
     }
 
     public int getPort() {
-        return port;
+        return boundPort;
     }
 
     // Static helper to start an embedded server locally
