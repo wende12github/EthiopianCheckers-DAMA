@@ -133,6 +133,9 @@ public class ControlPanel extends VBox {
 
         // Standard Buttons
         Button undoBtn = createStyledButton("⤺ Undo Move", "#546E7A");
+        if (session.getGameMode() == com.dama.ethiopiancheckersgame.engine.GameMode.ONLINE_MULTIPLAYER) {
+            undoBtn.setDisable(true); // Undo disabled in competitive online play
+        }
         undoBtn.setOnAction(e -> onUndoRequested.run());
 
         Button drawBtn = createStyledButton("🤝 Offer Draw", "#455A64");
@@ -174,6 +177,18 @@ public class ControlPanel extends VBox {
                         ButtonType.OK);
                 alert.setTitle("Draw Offer Declined");
                 alert.setHeaderText("AI Continues Playing");
+                alert.showAndWait();
+            }
+        } else if (session.getGameMode() == com.dama.ethiopiancheckersgame.engine.GameMode.ONLINE_MULTIPLAYER) {
+            Player other = (session.getPlayer1() instanceof com.dama.ethiopiancheckersgame.player.NetworkPlayer) ?
+                    session.getPlayer1() : session.getPlayer2();
+            if (other instanceof com.dama.ethiopiancheckersgame.player.NetworkPlayer np) {
+                np.getNetworkClient().offerDraw();
+                Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                        "Draw offer sent to online opponent. Waiting for their response...",
+                        ButtonType.OK);
+                alert.setTitle("Draw Offer Sent");
+                alert.setHeaderText("Waiting for Opponent");
                 alert.showAndWait();
             }
         } else {

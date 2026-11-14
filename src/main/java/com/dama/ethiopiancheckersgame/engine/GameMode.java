@@ -5,7 +5,8 @@ package com.dama.ethiopiancheckersgame.engine;
  */
 public enum GameMode {
     HUMAN_VS_HUMAN("Two Players (Pass & Play)"),
-    HUMAN_VS_AI("Player vs Computer (AI)");
+    HUMAN_VS_AI("Player vs Computer (AI)"),
+    ONLINE_MULTIPLAYER("Online Multiplayer (በኢንተርኔት)");
 
     private final String description;
 

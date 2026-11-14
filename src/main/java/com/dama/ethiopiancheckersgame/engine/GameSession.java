@@ -227,8 +227,8 @@ public class GameSession {
             l.onTurnStarted(current);
         }
 
-        // If current player is AI, automatically request its move
-        if (current.isAI()) {
+        // If current player is AI or remote Network player, automatically request move
+        if (current.isAI() || current instanceof com.dama.ethiopiancheckersgame.player.NetworkPlayer) {
             current.requestMove(currentState.copy()).thenAccept(move -> {
                 if (move != null) {
                     makeMove(move);

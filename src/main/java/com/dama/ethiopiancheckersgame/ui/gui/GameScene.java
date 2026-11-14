@@ -1,14 +1,21 @@
 package com.dama.ethiopiancheckersgame.ui.gui;
 
 import com.dama.ethiopiancheckersgame.core.model.Move;
+import com.dama.ethiopiancheckersgame.core.model.PieceColor;
+import com.dama.ethiopiancheckersgame.core.rules.DamaVariant;
 import com.dama.ethiopiancheckersgame.engine.GameEventListener;
+import com.dama.ethiopiancheckersgame.engine.GameMode;
 import com.dama.ethiopiancheckersgame.engine.GameSession;
+import com.dama.ethiopiancheckersgame.network.NetworkEventListener;
 import com.dama.ethiopiancheckersgame.player.HumanPlayer;
+import com.dama.ethiopiancheckersgame.player.NetworkPlayer;
 import com.dama.ethiopiancheckersgame.player.Player;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -17,6 +24,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+
+import java.util.Optional;
 
 /**
  * Main gameplay layout containing the BoardCanvas, ControlPanel, and interactive Game Over Overlay.
@@ -117,14 +126,109 @@ public class GameScene extends BorderPane implements GameEventListener {
         setCenter(mainLayout);
 
         session.addListener(this);
+        setupNetworkSync();
         session.start();
+    }
+
+    private NetworkPlayer getNetworkPlayer() {
+        if (session.getPlayer1() instanceof NetworkPlayer np) return np;
+        if (session.getPlayer2() instanceof NetworkPlayer np) return np;
+        return null;
+    }
+
+    private void setupNetworkSync() {
+        if (session.getGameMode() != GameMode.ONLINE_MULTIPLAYER) return;
+        NetworkPlayer np = getNetworkPlayer();
+        if (np == null) return;
+
+        np.getNetworkClient().setListener(new NetworkEventListener() {
+            @Override
+            public void onConnected() {}
+            @Override
+            public void onWaitingInQueue() {}
+            @Override
+            public void onRoomCreated(String roomCode) {}
+            @Override
+            public void onMatchStarted(PieceColor yourColor, String opponentName, DamaVariant variant) {}
+
+            @Override
+            public void onOpponentMove(Move move) {
+                Platform.runLater(() -> np.submitRemoteMove(move));
+            }
+
+            @Override
+            public void onOpponentDrawOffer() {
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Online opponent offered a draw (አቻ). Do you accept?",
+                            ButtonType.YES, ButtonType.NO);
+                    alert.setTitle("Draw Offer");
+                    alert.setHeaderText("Opponent Offered a Draw");
+                    Optional<ButtonType> res = alert.showAndWait();
+                    if (res.isPresent() && res.get() == ButtonType.YES) {
+                        np.getNetworkClient().acceptDraw();
+                        session.declareDraw("Mutual agreement with online opponent.");
+                    } else {
+                        np.getNetworkClient().declineDraw();
+                    }
+                });
+            }
+
+            @Override
+            public void onDrawAccepted() {
+                Platform.runLater(() -> session.declareDraw("Online opponent accepted the draw offer."));
+            }
+
+            @Override
+            public void onDrawDeclined() {
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                            "Online opponent declined the draw offer.", ButtonType.OK);
+                    alert.setTitle("Draw Declined");
+                    alert.showAndWait();
+                });
+            }
+
+            @Override
+            public void onOpponentResigned() {
+                Platform.runLater(() -> {
+                    Player local = (session.getPlayer1() instanceof HumanPlayer) ? session.getPlayer1() : session.getPlayer2();
+                    session.getCurrentState().setGameOver(local.getColor(), "Online opponent resigned the match.");
+                    onGameOver(local, "Online opponent resigned.");
+                });
+            }
+
+            @Override
+            public void onOpponentDisconnected() {
+                Platform.runLater(() -> {
+                    Player local = (session.getPlayer1() instanceof HumanPlayer) ? session.getPlayer1() : session.getPlayer2();
+                    session.getCurrentState().setGameOver(local.getColor(), "Online opponent disconnected.");
+                    onGameOver(local, "Online opponent disconnected.");
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, errorMessage, ButtonType.OK);
+                    alert.setTitle("Network Error");
+                    alert.showAndWait();
+                });
+            }
+        });
     }
 
     private void handleHumanMove(Move move) {
         Player current = session.getCurrentPlayer();
         if (current instanceof HumanPlayer human) {
             human.submitMove(move);
-            session.makeMove(move);
+            boolean executed = session.makeMove(move);
+            if (executed && session.getGameMode() == GameMode.ONLINE_MULTIPLAYER) {
+                NetworkPlayer np = getNetworkPlayer();
+                if (np != null) {
+                    np.getNetworkClient().sendMove(move);
+                }
+            }
         }
     }
 

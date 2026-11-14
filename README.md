@@ -23,6 +23,14 @@ An authentic, modernized implementation of traditional Ethiopian Checkers (Dama)
   * **Threefold Repetition**: Full board state fingerprinting prevents infinite cycle loops and declares a draw when the identical position occurs 3 times.
   * **50-Ply No-Progress Rule**: Declares a draw if 25 consecutive turns (50 plies) elapse without any captures or regular piece advances.
   * **Interactive Draw Offers**: Both players in Human vs Human can propose mutual draws; against Computer AI, the AI evaluates positional advantage via `BoardEvaluator`—accepting when balanced or losing, and declining when in a winning position.
+* **Online Multiplayer & Matchmaking**:
+  * **⚡ Quick Match (ፈጣን ግጥሚያ)**: 1-click public matchmaking queue that automatically pairs players anywhere on the internet without needing room codes.
+  * **🔒 Private Room (ከጓደኛ ጋር)**: Create or join custom matches with 4-digit room codes (e.g. `#4821`).
+  * **Zero-Configuration Fallback**: Built-in embedded relay server automatically boots up if no external relay is found.
+* **Authentic Ethiopian Cultural Onboarding UI**:
+  * Procedural **Tibeb (ጥበብ)** geometric textile ribbon patterns across the interface.
+  * Bilingual Ge'ez/Amharic typography (*የኢትዮጵያ ዳማ*, *እግረኛ*, *ታንከኛ*, *ነጠላ ተጫዋች*, *ሁለት ተጫዋች*, *የመስመር ላይ*).
+  * Interactive cards for Solo Play, Pass & Play, and Online Matchmaking.
 * **Non-Blocking Visual Feedback**: In the GUI, pieces with mandatory captures feature a subtle amber pulse (no disruptive modal popups).
 * **Game Over Experience**: Post-match floating card with **New Game** and **Review Board** mode.
 
